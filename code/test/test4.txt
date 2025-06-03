@@ -1,0 +1,2 @@
+var ch = 'a';
+var newline = '\n';

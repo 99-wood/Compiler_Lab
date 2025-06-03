@@ -1,0 +1,3 @@
+var pi = 3.1415;
+var big = 6.02e23;
+var small = 1.6e-19;

@@ -1,0 +1,5 @@
+fun main() {
+    var x = 42;
+    val y = x + 1;
+    return y;
+}

@@ -89,13 +89,14 @@
 |  2  |  Float  |
 |  3  |  Char  |
 |  4  |  Bool  |
-|  5  |  fun  |
-|  6  |  var  |
-|  7  |  val  |
-|  8  |  if  |
-|  9  |  else  |
-|  10 |  while  |
-|  11 |  return  |
+|  5  |  Void  |
+|  6  |  fun  |
+|  7  |  var  |
+|  8  |  val  |
+|  9  |  if  |
+|  10  |  else  |
+|  11 |  while  |
+|  12 |  return  |
 
 ## 界符
 
