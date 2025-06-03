@@ -16,16 +16,30 @@ std::string readFileToString(const std::string& filename) {
     return buffer.str();
 }
 int main() {
-    string s = readFileToString("..\\test.txt");
+    string code = readFileToString("..\\test.txt");
     vector<lexer::Token> ans;
     vector<string> err;
     vector<int> ci;
     vector<float> cf;
-    lexer::scan(s, ans, ci, cf, err);
+    vector<string> I;
+    lexer::scan(code, ans, I, ci, cf, err);
+
     for(auto s : err) std::cerr << s << endl;
-    for(auto token : ans) cout << token << " ";
+
+    cout << "token:";
+    for(auto token : ans) cout << " " << token;
     cout << endl;
-    for(float x : cf) cout << x << " ";
+
+    cout << "I:";
+    for(auto str : I) cout << " " << str;
+    cout << endl;
+
+    cout << "CI:";
+    for(auto token : ci) cout << " " << token;
+    cout << endl;
+
+    cout << "CF:";
+    for(float x : cf) cout << " " << x;
     cout << endl;
     return 0;
 }

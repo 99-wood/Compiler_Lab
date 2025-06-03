@@ -49,6 +49,7 @@ namespace lexer{
         , "\\"  /*23*/
         , ","   /*24*/
         , ";"   /*25*/
+        , ":"   /*26*/
     };
     namespace TokenType{
         enum TokenType {
@@ -72,8 +73,8 @@ namespace lexer{
         }
     };
 
-    bool scan(const string& str, vector<Token>& ans, vector<int>& ci, vector<float>& cf, vector<string>& err) {
-        vector<string> I;
+    bool scan(const string& str, vector<Token>& ans
+        , vector<string>& I, vector<int>& ci, vector<float>& cf, vector<string>& err) {
         int state = 0;
         int line = 1, column = 1;
         int num;
@@ -129,6 +130,9 @@ namespace lexer{
                 ss << arg;
                 ss << "\' before this.";
             }
+            else if(type == 4){ // 非法小数
+                ss << " Illegal decimals.";
+            }
             string output;
             std::getline(ss, output);
             err.push_back(output);
@@ -178,31 +182,31 @@ namespace lexer{
                 }
                 else if(c == '='){
                     now.push_back('=');
-                    state = 10;
+                    state = 11;
                 }
                 else if(c == '>'){
                     now.push_back('>');
-                    state = 11;
+                    state = 12;
                 }
                 else if(c == '<'){
                     now.push_back('<');
-                    state = 12;
+                    state = 13;
                 }
                 else if(c == '|'){
                     now.push_back('|');
-                    state = 13;
+                    state = 14;
                 }
                 else if(c == '&'){
                     now.push_back('&');
-                    state = 14;
+                    state = 15;
                 }
                 else if(c == '!'){
                     now.push_back('!');
-                    state = 15;
+                    state = 16;
                 }
                 else if(c == '\''){
                     now.push_back('\'');
-                    state = 16;
+                    state = 17;
                 }
                 else{
                     now.push_back(c);
@@ -362,7 +366,7 @@ namespace lexer{
                     ++column;
                 }
                 else{
-                    err.emplace_back("Illegal decimals.");
+                    addErr(4);
                     return false;
                 }
             }
@@ -384,7 +388,7 @@ namespace lexer{
                     ++column;
                 }
                 else if(isalpha(*ptr)){
-                    err.emplace_back("Illegal decimals.");
+                    addErr(4);
                     return false;
                 }
                 else{
@@ -398,7 +402,7 @@ namespace lexer{
                     return false;
                 }
                 else if(isdigit(*ptr)){
-                    state = 9;
+                    state = 10;
                     now.push_back(*ptr);
                     ++ptr;
                     ++column;
@@ -410,7 +414,7 @@ namespace lexer{
                     ++column;
                 }
                 else{
-                    err.emplace_back("Illegal decimals.");
+                    addErr(4);
                     return false;
                 }
             }
@@ -420,13 +424,29 @@ namespace lexer{
                     return false;
                 }
                 else if(isdigit(*ptr)){
-                    state = 9;
+                    state = 10;
+                    now.push_back(*ptr);
+                    ++ptr;
+                    ++column;
+                }
+                else{
+                    addErr(4);
+                    return false;
+                }
+            }
+            else if(state == 10){
+                if(ptr == str.end()){
+                    addErr(1);
+                    return false;
+                }
+                else if(isdigit(*ptr)){
+                    state = 10;
                     now.push_back(*ptr);
                     ++ptr;
                     ++column;
                 }
                 else if(isalpha(*ptr)){
-                    err.emplace_back("Illegal decimals.");
+                    addErr(4);
                     return false;
                 }
                 else{
@@ -434,7 +454,7 @@ namespace lexer{
                     addFloat();
                 }
             }
-            else if(state == 10 || state == 11 || state == 12 || state == 15){
+            else if(state == 11 || state == 12 || state == 13 || state == 16){
                 if(ptr == str.end()){
                     addErr(1, now);
                     return false;
@@ -451,7 +471,7 @@ namespace lexer{
                     addP();
                 }
             }
-            else if(state == 13){
+            else if(state == 14){
                 if(ptr == str.end()){
                     addErr(1, now);
                     return false;
@@ -467,7 +487,7 @@ namespace lexer{
                     addErr(0, now);
                 }
             }
-            else if(state == 14){
+            else if(state == 15){
                 if(ptr == str.end()){
                     addErr(1, now);
                     return false;
@@ -483,19 +503,19 @@ namespace lexer{
                     addErr(0, now);
                 }
             }
-            else if(state == 16){
+            else if(state == 17){
                 if(ptr == str.end()){
                     addErr(1, now);
                     return false;
                 }
                 else if(*ptr == '\\'){
-                    state = 17;
+                    state = 18;
                     now.push_back('\\');
                     ++ptr;
                     ++column;
                 }
                 else{
-                    state = 18;
+                    state = 19;
                     now.clear();
                     now.push_back(*ptr);
                     addChar();
@@ -503,13 +523,13 @@ namespace lexer{
                     ++column;
                 }
             }
-            else if(state == 17){
+            else if(state == 18){
                 if(ptr == str.end()){
                     addErr(1, now);
                     return false;
                 }
                 else if(*ptr == 'n'){
-                    state = 18;
+                    state = 19;
                     now.clear();
                     now.push_back('\n');
                     addChar();
@@ -517,7 +537,7 @@ namespace lexer{
                     ++column;
                 }
                 else if(*ptr == '\\'){
-                    state = 18;
+                    state = 19;
                     now.clear();
                     now.push_back('\\');
                     addChar();
@@ -531,7 +551,7 @@ namespace lexer{
                     return false;
                 }
             }
-            else if(state == 18){
+            else if(state == 19){
                 if(ptr == str.end()){
                     addErr(1, now);
                     return false;
