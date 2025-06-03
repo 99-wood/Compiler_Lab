@@ -1,0 +1,3 @@
+"D:\CLion 2023.2.2\bin\cmake\win\x64\bin\cmake.exe" -E rm -f CMakeFiles\code.dir/objects.a
+D:\CLION2~1.2\bin\mingw\bin\ar.exe qc CMakeFiles\code.dir/objects.a @CMakeFiles\code.dir\objects1.rsp
+D:\CLION2~1.2\bin\mingw\bin\G__~1.EXE -g -Wl,--whole-archive CMakeFiles\code.dir/objects.a -Wl,--no-whole-archive -o code.exe -Wl,--out-implib,libcode.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\code.dir\linkLibs.rsp
