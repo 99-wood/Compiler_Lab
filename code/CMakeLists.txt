@@ -4,5 +4,7 @@ project(code)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(code main.cpp
-        lexer.h)
+        lexer.h
+        parser.h
+)
 target_compile_options(code PRIVATE -Wall)

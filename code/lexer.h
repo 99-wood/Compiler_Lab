@@ -4,8 +4,14 @@
 
 #ifndef LEXER_H
 #define LEXER_H
-#include<string>
-#include<vector>
+
+#include <stdexcept>
+#include <iostream>
+#include <sstream>
+#include <algorithm>
+#include <cassert>
+#include <string>
+#include <vector>
 namespace lexer{
     using std::vector;
     using std::string;
@@ -51,31 +57,35 @@ namespace lexer{
         , ";"   /*25*/
         , ":"   /*26*/
     };
-    namespace TokenType{
-        enum TokenType {
-            K, P, I, CI, CF, CC, CB
-        };
-        std::ostream& operator<< (std::ostream& os, const TokenType& tt) {
-            if(tt == K) return os << "K";
-            if(tt == P) return os << "P";
-            if(tt == I) return os << "I";
-            if(tt == CI) return os << "CI";
-            if(tt == CF) return os << "CF";
-            if(tt == CC) return os << "CC";
-            if(tt == CB) return os << "CB";
-            throw std::runtime_error("Invalid TokenType value");
-        }
+    enum class TokenType {
+        K, P, I, CI, CF, CC, CB
+    };
+
+    inline std::ostream& operator<< (std::ostream& os, const TokenType& tt) {
+        if(tt == TokenType::K) return os << "K";
+        if(tt == TokenType::P) return os << "P";
+        if(tt == TokenType::I) return os << "I";
+        if(tt == TokenType::CI) return os << "CI";
+        if(tt == TokenType::CF) return os << "CF";
+        if(tt == TokenType::CC) return os << "CC";
+        if(tt == TokenType::CB) return os << "CB";
+        throw std::runtime_error("Invalid TokenType value");
     }
     struct Token {
-        TokenType::TokenType type;
+        TokenType type;
         int id;
+        Token() = default;
+        Token(const TokenType& type, const int& id) : type(type), id(id){}
+        explicit Token(const string& str) : type(TokenType::K), id() {
+            const auto pos = std::ranges::find(K, str);
+            if(pos == K.end()) throw std::runtime_error("Wrong on construct Token by string. Not found this string in K");
+            id = static_cast<int>(pos - K.begin()) + 1;
+        }
+        bool operator==(const Token& other) const {
+            return type == other.type && id == other.id;
+        }
         friend std::ostream& operator<< (std::ostream& os, const Token& token) {
             return os << "(" << token.type << ", " << token.id << ")";
-        }
-        friend Token stringToToken(const string& str) {
-            const auto pos = std::ranges::find(K, str);
-            if(pos == K.end()) throw std::runtime_error("Wrong on stringToToken. Not found this string");
-            return {TokenType::K, static_cast<int>(pos - K.begin()) + 1};
         }
     };
 
@@ -87,13 +97,12 @@ namespace lexer{
         int num;
         string now;
         auto addInt = [&]() {
-            auto pos = std::find(ci.begin(), ci.end(), num);
-            if(pos == ci.end()){
+            if(const auto pos = std::ranges::find(ci, num); pos == ci.end()){
                 ci.push_back(num);
-                ans.push_back(Token{TokenType::CI, static_cast<int>(ci.size())});
+                ans.emplace_back(TokenType::CI, static_cast<int>(ci.size()));
             }
             else{
-                ans.push_back(Token{TokenType::CI, static_cast<int>(pos - ci.begin() + 1)});
+                ans.emplace_back(TokenType::CI, static_cast<int>(pos - ci.begin() + 1));
             }
         };
         auto addFloat = [&]() {
@@ -104,14 +113,14 @@ namespace lexer{
             auto pos = std::find(cf.begin(), cf.end(), num);
             if(pos == cf.end()){
                 cf.push_back(num);
-                ans.push_back(Token{TokenType::CF, static_cast<int>(cf.size())});
+                ans.emplace_back(TokenType::CF, static_cast<int>(cf.size()));
             }
             else{
-                ans.push_back(Token{TokenType::CF, static_cast<int>(pos - cf.begin() + 1)});
+                ans.emplace_back(TokenType::CF, static_cast<int>(pos - cf.begin() + 1));
             }
         };
         auto addErr = [&](const int type, const string& arg = "") {std::stringstream ss;
-            ss << "Wrong ";
+            ss << "Wrong on ";
             ss << line;
             ss << " line ";
             ss << column;
@@ -150,7 +159,7 @@ namespace lexer{
         //         addErr(0, now);
         //         return false;
         //     }
-        //     ans.push_back(Token{TokenType::P, int(pos - P.begin() + 1)});
+        //     ans.emplace_back(TokenType::P, int(pos - P.begin() + 1));
         // };
 
 // 这里报错需要让整个函数返回而不是仅仅让 addP 返回，所以没办法了用来宏的写法。
@@ -160,12 +169,12 @@ namespace lexer{
         addErr(0, now); \
         return false; \
     } \
-    ans.push_back(Token{TokenType::P, int(pos - P.begin() + 1)}); \
+    ans.emplace_back(TokenType::P, int(pos - P.begin() + 1)); \
 } while (0)
 
         auto addChar = [&]() {
-            if(now.empty()) assert(0);
-            ans.push_back(Token{TokenType::CC, static_cast<int>(now[0])});
+            assert(now.size() == 1);
+            ans.emplace_back(TokenType::CC, static_cast<int>(now[0]));
         };
         auto ptr = str.begin();
         while(true){
@@ -243,16 +252,16 @@ namespace lexer{
                     state = 0;
                     auto pos = std::find(K.begin(), K.end(), now);
                     if(pos != K.end()){
-                        ans.push_back(Token{TokenType::K, static_cast<int>(pos - K.begin() + 1)});
+                        ans.emplace_back(TokenType::K, static_cast<int>(pos - K.begin() + 1));
                     }
                     else{
                         pos = std::find(I.begin(), I.end(), now);
                         if(pos == I.end()){
                             I.push_back(now);
-                            ans.push_back(Token{TokenType::I, static_cast<int>(I.size())});
+                            ans.emplace_back(TokenType::I, static_cast<int>(I.size()));
                         }
                         else{
-                            ans.push_back(Token{TokenType::I, static_cast<int>(pos - I.begin() + 1)});
+                            ans.emplace_back(TokenType::I, static_cast<int>(pos - I.begin() + 1));
                         }
                     }
                 }

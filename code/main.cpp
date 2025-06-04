@@ -1,22 +1,24 @@
 #include <bits/stdc++.h>
 #include "lexer.h"
+#include "parser.h"
+
 using std::cin;
 using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
-std::string readFileToString(const std::string& filename) {
-    std::ifstream file(filename);
+std::string readFileToString(const std::string& fileName) {
+    const std::ifstream file(fileName);
     std::ostringstream buffer;
     if (!file) {
-        std::cerr << "Error: Cannot open file " << filename << std::endl;
+        std::cerr << "Error: Cannot open file " << fileName << std::endl;
         exit(1);
     }
     buffer << file.rdbuf();
     return buffer.str();
 }
 int main() {
-    string code = readFileToString("..\\test.txt");
+    const string code = readFileToString(string("..\\test.txt"));
     vector<lexer::Token> ans;
     vector<string> err;
     vector<int> ci;
