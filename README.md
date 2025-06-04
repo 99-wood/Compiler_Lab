@@ -81,6 +81,53 @@
 - <加减运算符> $\rightarrow$ $+$ | $-$
 - <关系运算符> $\rightarrow$ $==$ | $!=$ | $<$ | $<=$ | $>$ | $>=$
 
+## 变元中英文对照（AI 生成）
+
+| 中文变元         | 英文命名建议                    |
+| ------------ | ------------------------- |
+| `<程序>`       | `Program`                 |
+| `<定义语句列表>`   | `DefStmtList`             |
+| `<定义语句列表'>`  | `DefStmtListTail`         |
+| `<定义语句>`     | `DefinitionStmt`          |
+| `<函数定义>`     | `FunctionDef`             |
+| `<变量定义语句>`   | `VarDefStmt`              |
+| `<常量定义语句>`   | `ConstDefStmt`            |
+| `<参数列表>`     | `ParamList`               |
+| `<代码块>`      | `CodeBlock`               |
+| `<语句列表>`     | `StmtList`                |
+| `<语句>`       | `Stmt`                    |
+| `<变量定义后缀>`   | `VarDefSuffix`            |
+| `<初始化列表>`    | `InitList`                |
+| `<初始化列表后缀>`  | `InitListSuffix`          |
+| `<初始化列表后缀'>` | `InitListSuffixTail`      |
+| `<标识符列表后缀>`  | `IdentListSuffix`         |
+| `<标识符>`      | `Identifier`              |
+| `<表达式语句>`    | `ExprStmt`                |
+| `<表达式>`      | `Expression`              |
+| `<赋值表达式>`    | `AssignExpr`              |
+| `<逻辑表达式>`    | `LogicExpr`               |
+| `<逻辑或表达式>`   | `LogicOrExpr`             |
+| `<逻辑与表达式>`   | `LogicAndExpr`            |
+| `<逻辑非表达式>`   | `LogicNotExpr`            |
+| `<关系表达式>`    | `RelExpr`                 |
+| `<算术表达式>`    | `ArithExpr`               |
+| `<项>`        | `Term`                    |
+| `<原子表达式>`    | `AtomExpr`                |
+| `<类型转换表达式>`  | `TypeCastExpr`            |
+| `<函数调用表达式>`  | `FuncCallExpr`            |
+| `<类型>`       | `Type`                    |
+| `<常数>`       | `ConstValue`（或 `Literal`） |
+| `<变量标识符>`    | `VarIdentifier`           |
+| `<常量标识符>`    | `ConstIdentifier`         |
+| `<函数标识符>`    | `FuncIdentifier`          |
+| `<if 语句>`    | `IfStmt`                  |
+| `<while 语句>` | `WhileStmt`               |
+| `<返回语句>`     | `ReturnStmt`              |
+| `<实参列表>`     | `ArgList`                 |
+| `<乘除运算符>`    | `MulDivOp`                |
+| `<加减运算符>`    | `AddSubOp`                |
+| `<关系运算符>`    | `RelOp`                   |
+
 ## 关键字编码
 
 |  id | 内容 |
