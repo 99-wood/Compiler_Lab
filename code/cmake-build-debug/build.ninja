@@ -51,7 +51,7 @@ build cmake_object_order_depends_target_code: phony || .
 
 build CMakeFiles/code.dir/main.cpp.obj: CXX_COMPILER__code_unscanned_Debug D$:/code/Compiler_Lab/code/main.cpp || cmake_object_order_depends_target_code
   DEP_FILE = CMakeFiles\code.dir\main.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall
   OBJECT_DIR = CMakeFiles\code.dir
   OBJECT_FILE_DIR = CMakeFiles\code.dir
 

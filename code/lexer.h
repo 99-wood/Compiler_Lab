@@ -63,6 +63,7 @@ namespace lexer{
             if(tt == CF) return os << "CF";
             if(tt == CC) return os << "CC";
             if(tt == CB) return os << "CB";
+            throw std::runtime_error("Invalid TokenType value");
         }
     }
     struct Token {
@@ -145,6 +146,8 @@ namespace lexer{
         //     }
         //     ans.push_back(Token{TokenType::P, int(pos - P.begin() + 1)});
         // };
+
+// 这里报错需要让整个函数返回而不是仅仅让 addP 返回，所以没办法了用来宏的写法。
 #define addP() do { \
     auto pos = std::find(P.begin(), P.end(), now); \
     if (pos == P.end()) { \
@@ -291,7 +294,7 @@ namespace lexer{
                     addErr(1);
                     return false;
                 }
-                else if(isdigit(*ptr) || 'a' <= *ptr && *ptr <= 'f'){
+                else if(isdigit(*ptr) || ('a' <= *ptr && *ptr <= 'f')){
                     state = 4;
                     now.push_back(*ptr);
                     ++ptr;
@@ -307,7 +310,7 @@ namespace lexer{
                     addErr(1);
                     return false;
                 }
-                else if(isdigit(*ptr) || 'a' <= *ptr && *ptr <= 'f'){
+                else if(isdigit(*ptr) || ('a' <= *ptr && *ptr <= 'f')){
                     now.push_back(*ptr);
                     ++ptr;
                     ++column;
