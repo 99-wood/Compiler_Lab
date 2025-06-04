@@ -72,6 +72,11 @@ namespace lexer{
         friend std::ostream& operator<< (std::ostream& os, const Token& token) {
             return os << "(" << token.type << ", " << token.id << ")";
         }
+        friend Token stringToToken(const string& str) {
+            const auto pos = std::ranges::find(K, str);
+            if(pos == K.end()) throw std::runtime_error("Wrong on stringToToken. Not found this string");
+            return {TokenType::K, static_cast<int>(pos - K.begin()) + 1};
+        }
     };
 
     bool scan(const string& str, vector<Token>& ans
