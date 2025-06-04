@@ -79,8 +79,9 @@ namespace lexer{
         }
     };
 
-    bool scan(const string& str, vector<Token>& ans
-        , vector<string>& I, vector<int>& ci, vector<float>& cf, vector<string>& err) {
+    inline bool scan(const string& str, vector<Token>& ans
+                     , vector<string>& I, vector<int>& ci, vector<float>& cf, vector<string>& err) {
+
         int state = 0;
         int line = 1, column = 1;
         int num;
