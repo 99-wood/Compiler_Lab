@@ -99,14 +99,19 @@ namespace parser{
             return;
         }
 
+        // 处理 <函数定义>
+        bool parseFunctionDef(){
+
+        }
+
         // 处理 <定义语句>
         bool parseDefinitionStmt() {
             if(ptr == str.end()){
-                addErr("Expect Token.");
+                addErrNow("Expect Token.");
                 return false;
             }
             if(*ptr == Token("fun")){
-
+                return
             }
             else if(*ptr == Token("var")){
 
