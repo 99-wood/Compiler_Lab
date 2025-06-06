@@ -76,10 +76,16 @@ namespace lexer{
         int id;
         Token() = default;
         Token(const TokenType& type, const int& id) : type(type), id(id){}
-        explicit Token(const string& str) : type(TokenType::K), id() {
-            const auto pos = std::ranges::find(K, str);
-            if(pos == K.end()) throw std::runtime_error("Wrong on construct Token by string. Not found this string in K");
-            id = static_cast<int>(pos - K.begin()) + 1;
+        explicit Token(const string& str) {
+            if(const auto pos = std::ranges::find(P, str); pos != P.end()){
+                type = TokenType::P;
+                id = static_cast<int>(pos - P.begin()) + 1;
+            }
+            if(const auto pos = std::ranges::find(K, str); pos != K.end()){
+                type = TokenType::K;
+                id = static_cast<int>(pos - K.begin()) + 1;
+            }
+            throw std::runtime_error("Wrong on construct Token by string. Not found this string in K");
         }
         bool operator==(const Token& other) const {
             return type == other.type && id == other.id;

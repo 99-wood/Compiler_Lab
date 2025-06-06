@@ -47,35 +47,47 @@ namespace parser{
         }ptr;
     };
 
-    static const SymbolType INT_PTR{TVAL::Int, nullptr};
-    static const SymbolType FLOAT_PTR{TVAL::Float, nullptr};
-    static const SymbolType CHAR_PTR{TVAL::Char, nullptr};
-    static const SymbolType BOOL_PTR{TVAL::Bool, nullptr};
-    static const SymbolType VOID_PTR{TVAL::Void, nullptr};
+    static const SymbolType INT_PTR{TVAL::Int, {nullptr}};
+    static const SymbolType FLOAT_PTR{TVAL::Float, {nullptr}};
+    static const SymbolType CHAR_PTR{TVAL::Char, {nullptr}};
+    static const SymbolType BOOL_PTR{TVAL::Bool, {nullptr}};
+    static const SymbolType VOID_PTR{TVAL::Void, {nullptr}};
 
     using SymbolTypeTable = vector<SymbolType>;
+    SymbolTypeTable symbolTypeTable{INT_PTR, FLOAT_PTR, CHAR_PTR, BOOL_PTR, VOID_PTR};
 
     enum class SymbolKind {
         FUN, CONST, TYPE, VAR, VAL
     };
 
     struct Symbol {
-        Token name;
+        Token token;
         SymbolType* type;
         SymbolKind* kind;
         union SymbolInfoPtr {
 
         }ptr;
     };
-    using SymbolTable = vector<Symbol>;
+
+    class SymbolTable : public vector<Symbol>{
+    public:
+        SymbolTable::iterator findByToken(const Token& tk){
+            auto pos = this->begin();
+            while(pos != this->end()){
+                if(pos->token == tk) return pos;
+                ++pos;
+            }
+            return pos;
+        }
+    };
 
     class Parser {
     private:
         vector<Token> str;
         vector<Quad> ans;
-        int firstQuad;
+        int firstQuad{};
         vector<string> err;
-        bool hasParsed;
+        bool hasParsed{};
         vector<Token>::const_iterator ptr;
 
         enum class ErrType {
@@ -100,18 +112,30 @@ namespace parser{
         }
 
         // 处理 <函数定义>
-        bool parseFunctionDef(){
-
+        bool parseFunctionDef(SymbolTable& symbolTable){
+            assert(ptr != str.end() && *ptr == Token("fun"));
+            ++ptr;
+            if(ptr != str.end() && ptr->type == lexer::TokenType::I){
+                if(symbolTable.findByToken(*ptr) != symbolTable.end()){
+                    addErrNow("multidef");
+                    return false;
+                }
+            }
+            else{
+                addErrNow();
+                return false;
+            }
+            
         }
 
         // 处理 <定义语句>
-        bool parseDefinitionStmt() {
+        bool parseDefinitionStmt(SymbolTable& symbolTable) {
             if(ptr == str.end()){
                 addErrNow("Expect Token.");
                 return false;
             }
             if(*ptr == Token("fun")){
-                return
+                return parseFunctionDef(symbolTable);
             }
             else if(*ptr == Token("var")){
 
@@ -123,32 +147,32 @@ namespace parser{
                 addErrNow("Unexpected token.");
                 return false;
             }
-
         }
 
         // 处理 <定义语句列表'>
-        bool parseDefStmtListTail() {
+        bool parseDefStmtListTail(SymbolTable& symbolTable) {
             if(ptr == str.end()) return true;
-            if(parseDefinitionStmt()) return false;
-            return parseDefStmtListTail();
+            if(parseDefinitionStmt(symbolTable)) return false;
+            return parseDefStmtListTail(symbolTable);
         }
 
         // 处理 <定义语句列表>
-        bool parseDefStmtList() {
-            if(parseDefinitionStmt()) return false;
-            return parseDefStmtListTail();
+        bool parseDefStmtList(SymbolTable& symbolTable) {
+            if(parseDefinitionStmt(symbolTable)) return false;
+            return parseDefStmtListTail(symbolTable);
         }
 
         // 处理 <程序>
         bool parseProgram() {
-            if(parseDefStmtList() == false){
+            SymbolTable globalSymbolTable;
+            if(bool res = parseDefStmtList(globalSymbolTable); !res){
                 return false;
             }
             else if(firstQuad == -1){
                 addErr("Have no main function!");
                 return false;
             }
-            else return parseDefStmtList();
+            else return true;
         }
 
     public:
@@ -157,8 +181,8 @@ namespace parser{
             str.clear();
             hasParsed = false;
         }
-        void changeStr(const vector<Token>& str) {
-            this->str = str;
+        void changeStr(const vector<Token>& newStr) {
+            str = newStr;
             hasParsed = false;
             return;
         }
