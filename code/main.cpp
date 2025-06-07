@@ -43,5 +43,19 @@ int main() {
     cout << "CF:";
     for(float x : cf) cout << " " << x;
     cout << endl;
+
+    parser::Parser parser;
+    parser.changeStr(ans, ci, cf, I);
+    if(!parser.run()){
+        for(auto parseErr = parser.getErr(); const auto& s : parseErr) cout << s << endl;
+    }
+    else{
+        auto res = parser.getRes();
+        for(int i = 0; i < res.size(); ++i){
+            cout << i << ": " << res[i] << endl;
+        }
+    }
+
+
     return 0;
 }

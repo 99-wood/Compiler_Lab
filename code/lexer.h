@@ -81,11 +81,11 @@ namespace lexer{
                 type = TokenType::P;
                 id = static_cast<int>(pos - P.begin()) + 1;
             }
-            if(const auto pos = std::ranges::find(K, str); pos != K.end()){
+            else if(const auto pos = std::ranges::find(K, str); pos != K.end()){
                 type = TokenType::K;
                 id = static_cast<int>(pos - K.begin()) + 1;
             }
-            throw std::runtime_error("Wrong on construct Token by string. Not found this string in K");
+            else throw std::runtime_error("Wrong on construct Token by string. Not found this string in K");
         }
         bool operator==(const Token& other) const {
             return type == other.type && id == other.id;

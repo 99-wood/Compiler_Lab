@@ -1,27 +1,3 @@
 fun main() : Int {
-    var x = 3.14e2;
-    val y = -42;
-    val z = x + y * Int(5.1e-15);
-
-    if (x >= y && y != 0) {
-        return x / y;
-    } else {
-        val msg = 'A';
-        val escape = '\\';
-        val ch = 'c';
-        val b = true;
-    }
-
-    while (x < 100) {
-        x = x - 1;
-    }
-
-    x = x + y;
-    x = x - y;
-    x = x * y;
-    x = x / y;
-    if (x == y || x != y) {
-        x = 0;
-    }
-
+    var a, b : Int;
 }
