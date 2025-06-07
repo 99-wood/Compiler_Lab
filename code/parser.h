@@ -183,7 +183,69 @@ namespace parser{
             ++ptr;
         }
 
-        ParamInfo *parseParamList(ParamInfo &paramTable) {
+        // 处理 <函数代码块>
+
+        bool parseCodeBlock(int off, FunInfo& funInfo){
+
+        }
+
+        // 处理 <参数列表>
+        bool parseParamList(ParamInfo &paramTable, int off) {
+            if(expect(Token(")"))){
+                next();
+                return true;
+            }
+            else if(expect(lexer::TokenType::I)){
+                SymbolTable &symbolTable = symbolTableStack.back();
+                Token token = peek();
+                const SymbolType *type = nullptr;
+                if(symbolTable.findByToken(token) != symbolTable.end()){
+                    addErrNow("Multi define function.");
+                    return false;
+                }
+                next();
+                if(!match(Token(":"))){
+                    addErrNow("Expect ':'.");
+                    return false;
+                }
+                if(expect(lexer::TokenType::K)){
+                    if(Token tk = peek(); tk == Token("Int")) type = &INT;
+                    else if(tk == Token("Float")) type = &FLOAT;
+                    else if(tk == Token("Char")) type = &CHAR;
+                    else if(tk == Token("Bool")) type = &BOOL;
+                    else if(tk == Token("Void")){
+                        addErrNow("Param cannot be Void.");
+                        return false;
+                    }
+                    else{
+                        addErrNow("Undefined type.");
+                        return false;
+                    }
+                    next();
+                }
+                else{
+                    addErrNow("Expect type.");
+                    return false;
+                }
+                if(!match(Token(","))){
+                    addErrNow("Expect ','.");
+                    return false;
+                }
+                symbolTable.push_back(Symbol{token, type, SymbolKind::VAL, {.vPtr=off}});
+                paramTable.push_back(Symbol{token, type, SymbolKind::VAL, {.vPtr=off}});
+                if(type == &INT || type == &FLOAT){
+                    off += 4;
+                }
+                else{
+                    assert(type == &CHAR || type == &BOOL);
+                    off += 1;
+                }
+                return parseParamList(paramTable, off);
+            }
+            else{
+                addErrNow();
+                return false;
+            }
         }
 
         // 处理 <函数定义>
@@ -193,9 +255,9 @@ namespace parser{
             const SymbolType *type;
             auto *funInfo = new FunInfo;
             funInfo->level = level;
-            funInfo->off = 12;
+            funInfo->off = 8;
             funInfo->paramInfoPtr = new ParamInfo();
-            funInfo->entry(ans.size());
+            funInfo->entry = static_cast<int>(ans.size());
             assert(match(Token("fun")));
             if(!empty() && expect(lexer::TokenType::I)){
                 name = peek();
@@ -215,27 +277,24 @@ namespace parser{
             }
             ++level;
             symbolTableStack.emplace_back();
-            if(!parseParamList(*funInfo->paramInfoPtr)) return false;
-            --level;
+            if(!parseParamList(*funInfo->paramInfoPtr, funInfo->off)) return false;
             if(!match(Token(")"))){
                 addErrNow("Expect ')'.");
                 return false;
             }
+            if(!match(Token(":"))){
+                addErrNow("Expect ':'.");
+                return false;
+            }
             if(expect(lexer::TokenType::K)){
-                switch(peek()){
-                    case Token("Int"): type = &INT;
-                        break;
-                    case Token("Float"): type = &FLOAT;
-                        break;
-                    case Token("Char"): type = &CHAR;
-                        break;
-                    case Token("Bool"): type = &BOOL;
-                        break;
-                    case Token("Void"): type = &VOID;
-                        break;
-                    default:
-                        addErrNow("Undefined type.");
-                        return false;
+                if(Token token = peek(); token == Token("Int")) type = &INT;
+                else if(peek() == Token("Float")) type = &FLOAT;
+                else if(peek() == Token("Char")) type = &CHAR;
+                else if(peek() == Token("Bool")) type = &BOOL;
+                else if(peek() == Token("Void")) type = &VOID;
+                else{
+                    addErrNow("Undefined type.");
+                    return false;
                 }
                 next();
             }
@@ -244,6 +303,7 @@ namespace parser{
                 return false;
             }
             symbolTable.push_back(Symbol{name, type, SymbolKind::FUN, {.funPtr = funInfo}});
+//            if(!parseCodeBlock())
         }
 
         // 处理 <定义语句>
