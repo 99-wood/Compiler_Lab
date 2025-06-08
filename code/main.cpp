@@ -51,7 +51,7 @@ int main() {
     }
     else{
         auto res = parser.getRes();
-        for(int i = 0; i < res.size(); ++i){
+        for(size_t i = 0; i < res.size(); ++i){
             cout << i << ": " << res[i] << endl;
         }
     }

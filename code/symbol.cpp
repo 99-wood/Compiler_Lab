@@ -49,6 +49,15 @@ namespace symbol{
         // }
     }
 
+    int TempSymbol::getVal() const {
+        if(kind != SymbolKind::CONST) throw std::runtime_error("not a const number.");
+        if(type == &INT) return std::get<int>(ptr);
+        else if(type == &FLOAT) return std::bit_cast<int>(std::get<float>(ptr));
+        else if(type == &CHAR) return static_cast<int>(std::get<char>(ptr));
+        else if(type == &BOOL) return static_cast<int>(std::get<bool>(ptr));
+        else throw std::runtime_error("Wrong type on get const val.");
+    }
+
     // Symbol::Symbol(const Token &token, const TempSymbol &symbol) : token(token), type(symbol.type), kind(symbol.kind),
     //                                                             ptr() {
     //     if(symbol.kind == SymbolKind::FUN || symbol.kind == SymbolKind::PROCESS || symbol.kind == SymbolKind::TYPE)

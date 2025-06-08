@@ -25,7 +25,7 @@ namespace symbol{
             void *nullPtr;
         } ptr;
 
-        [[nodiscard]] size_t size() const {
+        [[nodiscard]] int size() const {
             switch(type){
                 case TVAL::Int: return 4;
                     break;
@@ -76,8 +76,9 @@ namespace symbol{
     };
 
     using SymbolInfoPtr = std::variant<
-        int,         // 用于 vPtr, CI
+        std::pair<int, int>, // v
         FunInfo*,    // funPtr
+        int,         // 用于 CI
         float,       // CF
         char,        // CC
         bool         // CB
@@ -92,6 +93,8 @@ namespace symbol{
         TempSymbol() = default;
 
         explicit TempSymbol(const Symbol &symbol);
+
+        [[nodiscard]] int getVal() const;
     };
 
     struct Symbol {
@@ -113,7 +116,15 @@ namespace symbol{
 
     class SymbolTable : public vector<Symbol> {
     public:
-        iterator findByToken(const Token &tk) {
+        [[nodiscard]] iterator findByToken(const Token &tk) {
+            auto pos = this->begin();
+            while(pos != this->end()){
+                if(pos->token == tk) return pos;
+                ++pos;
+            }
+            return pos;
+        }
+        [[nodiscard]] const_iterator findByToken(const Token &tk) const {
             auto pos = this->begin();
             while(pos != this->end()){
                 if(pos->token == tk) return pos;
