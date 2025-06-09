@@ -48,6 +48,7 @@ namespace parser{
         bool hasParsed{};
         vector<Token>::const_iterator ptr;
         vector<SymbolTable> symbolTableStack;
+
         int level{};
 
         enum class ErrType {
@@ -233,7 +234,7 @@ namespace parser{
         }
 
         void mov(const string &reg, const int &src, const int size) {
-            assert(reg == "BX" || reg == "DS");
+            assert(reg == "BX" || reg == "DS" || reg == "ES");
             ans.emplace_back(
                 "MOV",
                 reg,
@@ -321,6 +322,22 @@ namespace parser{
                 mov(dest, std::pair<int, int>(std::get<std::pair<int, int> >(src.ptr)), src.type->size(), off);
             }
         }
+        // [ES:BX] <- [DS:OFF]
+        void mov(const string &ES, const string &BX, const string &DS, const int off, const int size) {
+            assert(ES == "ES");
+            assert(BX == "BX");
+            assert(DS == "DS");
+            ans.emplace_back("MOV",
+                             "[ES + BX, " + std::to_string(size) + "]",
+                             "[DS + " + std::to_string(off) + ", " + std::to_string(size) + "]");
+        }
+
+        // 跳转到 BX
+        void jmp(const string &reg) {
+            assert(reg == "BX");
+            ans.emplace_back("JMP", "BX");
+            return;
+        }
 
         // 临时变量 <- 临时变量，带类型类型检查，可选警告隐式类型转换
         void mov(const TempSymbol &dest, const TempSymbol &src, int &off) {
@@ -366,7 +383,8 @@ namespace parser{
         }
 
         // 处理函数调用
-        TempSymbol handleCallFunction(const Symbol &funSymbol, const vector<TempSymbol> &args, int &off, bool &isSuccess) {
+        TempSymbol handleCallFunction(const Symbol &funSymbol, const vector<TempSymbol> &args, int &off,
+                                      bool &isSuccess) {
             // TODO
         }
 
@@ -503,6 +521,7 @@ namespace parser{
         // 处理 <常量定义语句>
         bool parseValDefStmt(int &off) {
             // TODO
+            throw std::runtime_error("目前不可以定义常量");
         }
 
         // 处理 <if 语句>
@@ -547,7 +566,31 @@ namespace parser{
         // 处理 <return 语句>
         bool parseReturnStmt(int &off, const Symbol &funSymbol) {
             assert(match(Token("return")));
-            // TODO
+            if(match(Token(";"))){
+                if(funSymbol.type != &VOID){
+                    addErrNow("The function needs to return a value.");
+                    return false;
+                }
+                return true;
+            }
+            else{
+                TempSymbol res;
+                if(!parseExpression(off, res)) return false;
+                if(funSymbol.type == &VOID){
+                    addErrNow("The Void function needs to return a value.");
+                    return false;
+                }
+                // TODO: 优化传值
+                res = toLocal(res, off);
+                mov("DS", 0, 4);
+                mov("BX", 4, 4);
+                mov("ES", "BX", "DS", std::get<std::pair<int, int>>(res.ptr).second, res.type->size());
+            }
+            mov("BX", 8, 4);
+            mov("DS", 0, 4);
+            // TODO: 释放空间
+            jmp("BX");
+            return true;
         }
 
 
@@ -576,6 +619,7 @@ namespace parser{
             }
             return parseArgList(off, args);
         }
+
         // 处理 <函数调用表达式>
         bool parseFuncCallExpr(int &off, TempSymbol &res) {
             const Token token = peek();
@@ -866,7 +910,7 @@ namespace parser{
             const SymbolType *type; // 函数类型
             auto *funInfo = new FunInfo(level, 16, 16, new ParamInfo, static_cast<int>(ans.size())); // 函数信息表
             // funInfo->level = level;
-            // funInfo->off = 16; // 返回值地址偏移量，返回地址基址，跳转指令地址，全局变量偏移量
+            // funInfo->off = 16; // 返回地址基址，返回值地址偏移量，跳转指令地址，全局变量偏移量
             // funInfo->stackSize = 16;
             // funInfo->paramInfoPtr = new ParamInfo();
             // funInfo->entry = static_cast<int>(ans.size());
