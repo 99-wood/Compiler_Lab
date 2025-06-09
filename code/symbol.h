@@ -40,6 +40,21 @@ namespace symbol{
                 default: throw std::runtime_error("Undefined type.");
             }
         }
+        [[nodiscard]] string toString() const {
+            switch(type){
+                case TVAL::Int: return "Int";
+                    break;
+                case TVAL::Float: return "Float";
+                    break;
+                case TVAL::Char: return "Char";
+                    break;
+                case TVAL::Bool: return "Bool";
+                    break;
+                case TVAL::Void: return "Void";
+                    break;
+                default: throw std::runtime_error("Undefined type.");
+            }
+        }
     };
 
     constexpr SymbolType INT{TVAL::Int, {nullptr}};
@@ -93,6 +108,8 @@ namespace symbol{
         TempSymbol() = default;
 
         explicit TempSymbol(const Symbol &symbol);
+
+        TempSymbol(const SymbolType *type, const SymbolKind &kind, SymbolInfoPtr ptr);
 
         [[nodiscard]] int getVal() const;
     };

@@ -192,12 +192,33 @@ namespace parser{
             return "[DS +" + std::to_string(off) + ", " + std::to_string(size) + "]";
         }
 
+        static string addrToString(const string &sreg, const string &breg, const int off, const int size) {
+            assert(sreg == "DS" || sreg == "ES");
+            assert(breg == "BX");
+            if(off == 0){
+                return "[" + sreg + "+" + breg + ", " + std::to_string(size) + "]";
+            }
+            else{
+                return "[" + sreg + "+" + breg + "+" + std::to_string(off) + ", " + std::to_string(size) + "]";
+            }
+        }
+
+        static string addrToString(const string &sreg, const int off, const int size) {
+            assert(sreg == "DS" || sreg == "ES");
+            if(off == 0){
+                return "[" + sreg + ", " + std::to_string(size) + "]";
+            }
+            else{
+                return "[" + sreg + "+" + std::to_string(off) + ", " + std::to_string(size) + "]";
+            }
+        }
+
         void push(const string &reg, int &off) {
             assert(reg == "BX" || reg == "DS" || reg == "ES");
             ans.emplace_back(
                 "MOV",
-                offsetToString(off, 4),
-                reg);
+                reg,
+                offsetToString(off, 4));
             off += 4;
         }
 
@@ -205,48 +226,48 @@ namespace parser{
             assert(reg == "BX" || reg == "DS" || reg == "ES");
             ans.emplace_back(
                 "MOV",
-                reg,
-                offsetToString(off, 4));
+                offsetToString(off, 4),
+                reg);
         }
 
-        void movConst(const int dest, const int val) {
-            ans.emplace_back("MOV", offsetToString(dest, 4), std::to_string(val));
-        }
-
-        void movConst(const int dest, const float val) {
-            ans.emplace_back("MOV", offsetToString(dest, 4), std::to_string(std::bit_cast<int>(val)));
-        }
-
-        void movConst(const int dest, const char val) {
-            ans.emplace_back("MOV", offsetToString(dest, 1), std::to_string(static_cast<int>(val)));
-        }
-
-        void movConst(const int dest, const bool val) {
-            ans.emplace_back("MOV", offsetToString(dest, 1), std::to_string(static_cast<int>(val)));
-        }
+        // void movConst(const int dest, const int val) {
+        //     ans.emplace_back("MOV", std::to_string(val), offsetToString(dest, 4));
+        // }
+        //
+        // void movConst(const int dest, const float val) {
+        //     ans.emplace_back("MOV", offsetToString(dest, 4), std::to_string(std::bit_cast<int>(val)));
+        // }
+        //
+        // void movConst(const int dest, const char val) {
+        //     ans.emplace_back("MOV", offsetToString(dest, 1), std::to_string(static_cast<int>(val)));
+        // }
+        //
+        // void movConst(const int dest, const bool val) {
+        //     ans.emplace_back("MOV", offsetToString(dest, 1), std::to_string(static_cast<int>(val)));
+        // }
 
         void mov(const string &dest, const string &src, const int size) {
             assert(dest == "BX" || dest == "DS" || dest == "ES");
             assert(src == "BX" || src == "DS" || dest == "ES");
             if(dest == src) return;
             assert(size == 4);
-            ans.emplace_back("MOV", dest, src);
+            ans.emplace_back("MOV", src, dest);
         }
 
         void mov(const string &reg, const int &src, const int size) {
             assert(reg == "BX" || reg == "DS" || reg == "ES");
             ans.emplace_back(
                 "MOV",
-                reg,
-                offsetToString(src, size));
+                offsetToString(src, size),
+                reg);
         }
 
         void mov(const int &dest, const string &reg, const int size) {
             assert(reg == "BX" || reg == "DS");
             ans.emplace_back(
                 "MOV",
-                offsetToString(dest, size),
-                reg);
+                reg,
+                offsetToString(dest, size));
         }
 
         void mov(const std::pair<int, int> &dest, const string &reg, const int size, int &off) {
@@ -295,7 +316,7 @@ namespace parser{
 
         // [偏移量] <- [偏移量]
         void mov(const int dest, const int src, const int size) {
-            ans.emplace_back("MOV", offsetToString(dest, size), offsetToString(src, size));
+            ans.emplace_back("MOV", offsetToString(src, size), offsetToString(dest, size));
         }
 
         // [偏移量] <- [地址]
@@ -310,26 +331,26 @@ namespace parser{
 
         // [偏移量] <- 临时变量
         void mov(const int dest, const TempSymbol &src, int &off) {
+            if(src.type == &VOID) throw std::runtime_error("Cannot move Void.");
             if(src.kind == SymbolKind::CONST){
-                if(src.type == &INT) return movConst(dest, std::get<int>(src.ptr));
-                else if(src.type == &FLOAT) return movConst(dest, std::get<float>(src.ptr));
-                else if(src.type == &CHAR) return movConst(dest, std::get<char>(src.ptr));
-                else if(src.type == &BOOL) return movConst(dest, std::get<bool>(src.ptr));
-                else throw std::runtime_error("Wrong type on get const val.");
+                ans.emplace_back("MOV",
+                                 std::to_string(src.getVal()),
+                                 offsetToString(dest, src.type->size()));
             }
             else{
                 assert(src.kind == SymbolKind::VAL || src.kind == SymbolKind::VAR);
                 mov(dest, std::pair<int, int>(std::get<std::pair<int, int> >(src.ptr)), src.type->size(), off);
             }
         }
+
         // [ES:BX] <- [DS:OFF]
         void mov(const string &ES, const string &BX, const string &DS, const int off, const int size) {
             assert(ES == "ES");
             assert(BX == "BX");
             assert(DS == "DS");
             ans.emplace_back("MOV",
-                             "[ES + BX, " + std::to_string(size) + "]",
-                             "[DS + " + std::to_string(off) + ", " + std::to_string(size) + "]");
+                             "[DS + " + std::to_string(off) + ", " + std::to_string(size) + "]",
+                             "[ES + BX, " + std::to_string(size) + "]");
         }
 
         // 跳转到 BX
@@ -339,53 +360,139 @@ namespace parser{
             return;
         }
 
-        // 临时变量 <- 临时变量，带类型类型检查，可选警告隐式类型转换
+        // 临时变量 <- 临时变量，带类型类型检查，可警告隐式类型转换
         void mov(const TempSymbol &dest, const TempSymbol &src, int &off) {
             // TODO
+            assert(0);
         }
 
+        // 类型转换，影响 ES
         TempSymbol typeConversion(const TempSymbol &symbol, const SymbolType *type, int &off) {
-            // TODO
+            assert(
+                symbol.kind == SymbolKind::CONST || symbol.kind == SymbolKind::VAL || symbol.kind == SymbolKind::VAL);
+            if(symbol.type == type) return symbol;
+            if(symbol.type == &VOID){
+                throw std::runtime_error("Cannot trans Void.");
+            }
+            if(type == &VOID){
+                throw std::runtime_error("Cannot trans to Void.");
+            }
+            if(symbol.kind == SymbolKind::CONST){
+                TempSymbol res;
+                res.type = type;
+                res.kind = SymbolKind::CONST;
+                if(type == &INT){
+                    if(symbol.type == &INT) res.ptr = static_cast<int>(std::get<int>(symbol.ptr));
+                    else if(symbol.type == &FLOAT) res.ptr = static_cast<int>(std::get<float>(symbol.ptr));
+                    else if(symbol.type == &CHAR) res.ptr = static_cast<int>(std::get<char>(symbol.ptr));
+                    else if(symbol.type == &BOOL) res.ptr = static_cast<int>(std::get<bool>(symbol.ptr));
+                    else throw std::runtime_error("Wrong type.");
+                }
+                else if(type == &FLOAT){
+                    if(symbol.type == &INT) res.ptr = static_cast<float>(std::get<int>(symbol.ptr));
+                    else if(symbol.type == &FLOAT) res.ptr = static_cast<float>(std::get<float>(symbol.ptr));
+                    else if(symbol.type == &CHAR) res.ptr = static_cast<float>(std::get<char>(symbol.ptr));
+                    else if(symbol.type == &BOOL) res.ptr = static_cast<float>(std::get<bool>(symbol.ptr));
+                    else throw std::runtime_error("Wrong type.");
+                }
+                else if(type == &CHAR){
+                    if(symbol.type == &INT) res.ptr = static_cast<char>(std::get<int>(symbol.ptr));
+                    else if(symbol.type == &FLOAT) res.ptr = static_cast<char>(std::get<float>(symbol.ptr));
+                    else if(symbol.type == &CHAR) res.ptr = static_cast<char>(std::get<char>(symbol.ptr));
+                    else if(symbol.type == &BOOL) res.ptr = static_cast<char>(std::get<bool>(symbol.ptr));
+                    else throw std::runtime_error("Wrong type.");
+                }
+                else if(type == &BOOL){
+                    if(symbol.type == &INT) res.ptr = static_cast<bool>(std::get<int>(symbol.ptr));
+                    else if(symbol.type == &FLOAT) res.ptr = static_cast<bool>(std::get<float>(symbol.ptr));
+                    else if(symbol.type == &CHAR) res.ptr = static_cast<bool>(std::get<char>(symbol.ptr));
+                    else if(symbol.type == &BOOL) res.ptr = static_cast<bool>(std::get<bool>(symbol.ptr));
+                    else throw std::runtime_error("Wrong type.");
+                }
+                else throw std::runtime_error("Wrong type.");
+                return res;
+            }
+            else{
+                TempSymbol res;
+                res.type = type;
+                res.kind = SymbolKind::VAR;
+                res.ptr = std::pair<int, int>(level, off);
+                auto [lv, of] = std::get<std::pair<int, int> >(res.ptr);
+                mov("ES", 12 + lv * 4, 4);
+                ans.emplace_back(res.type->toString()[0] + "2" + type->toString()[0],
+                                 addrToString("ES", of, res.type->size()),
+                                 offsetToString(off, type->size()));
+                off += type->size();
+                return res;
+            }
         }
 
+        // 移动到当前段，影响 ES
         TempSymbol toLocal(const TempSymbol &symbol, int &off) {
-            // TODO
+            if(symbol.type == &VOID){
+                throw std::runtime_error("Cannot trans Void to local.");
+            }
+            if(symbol.kind == SymbolKind::CONST){
+                const int tmp = off;
+                off += symbol.type->size();
+                ans.emplace_back("MOV",
+                                 std::to_string(symbol.getVal()),
+                                 offsetToString(tmp, symbol.type->size()));
+                return {symbol.type, SymbolKind::CONST, std::pair<int, int>(level, tmp)};
+            }
+            else{
+                const int tmp = off;
+                off += symbol.type->size();
+                auto [lv, of] = std::get<std::pair<int, int> >(symbol.ptr);
+                mov("ES", 12 + lv * 4, 4);
+                ans.emplace_back("MOV",
+                                 addrToString("ES", of, symbol.type->size()),
+                                 offsetToString(tmp, symbol.type->size()));
+                return {symbol.type, SymbolKind::CONST, std::pair<int, int>(level, tmp)};
+            }
         }
 
         // 处理逻辑或运算
         TempSymbol handleLogicOr(const TempSymbol &x, const TempSymbol &y, int &off) {
             // TODO
+            assert(0);
         }
 
         // 处理逻辑与运算
         TempSymbol handleLogicAnd(const TempSymbol &x, const TempSymbol &y, int &off) {
             // TODO
+            assert(0);
         }
 
         // 处理逻辑非运算
         TempSymbol handleLogicNot(const TempSymbol &x, int &off) {
             // TODO
+            assert(0);
         }
 
         // 处理关系运算
         TempSymbol handleRelation(const TempSymbol &x, const TempSymbol &y, const Token &token, int &off) {
             // TODO
+            assert(0);
         }
 
         // 处理加减运算
         TempSymbol handleAddOrSub(const TempSymbol &x, const TempSymbol &y, const Token &token, int &off) {
             // TODO
+            assert(0);
         }
 
         // 处理乘除运算
         TempSymbol handleMulOrDiv(const TempSymbol &x, const TempSymbol &y, const Token &token, int &off) {
             // TODO
+            assert(0);
         }
 
         // 处理函数调用
         TempSymbol handleCallFunction(const Symbol &funSymbol, const vector<TempSymbol> &args, int &off,
                                       bool &isSuccess) {
             // TODO
+            assert(0);
         }
 
 
@@ -522,6 +629,7 @@ namespace parser{
         bool parseValDefStmt(int &off) {
             // TODO
             throw std::runtime_error("目前不可以定义常量");
+            assert(0);
         }
 
         // 处理 <if 语句>
@@ -532,17 +640,34 @@ namespace parser{
             parseExpression(off, res);
             if(!match(Token(")"))) return false;
             // TODO
+            assert(0);
+            if(res.type != &BOOL){
+                addImplicitTypeConversionWarn();
+                res = typeConversion(res, &BOOL, off);
+            }
+            const int JZ = static_cast<int>(ans.size());
+            if(res.kind == SymbolKind::CONST){
+                ans.emplace_back("JZ", std::to_string(res.getVal()), "_");
+            }
+            else{
+                res = toLocal(res, off);
+                ans.emplace_back("JZ", offsetToString(std::get<std::pair<int, int> >(res.ptr).second, 1), "_");
+            }
             ++level;
             int newOffset = level * 4 + 12;
             if(parseCodeBlock(newOffset, funSymbol)) return false;
+            ans[JZ].arg2 = std::to_string(ans.size());
             if(match(Token("else"))){
-                // TODO
+                const int JMP = static_cast<int>(ans.size());
+                ans.emplace_back("JZ", "_");
                 if(!parseCodeBlock(newOffset, funSymbol)) return false;
             }
             else{
                 // TODO
+                assert(0);
             }
             // TODO
+            assert(0);
             --level;
             return true;
         }
@@ -555,10 +680,12 @@ namespace parser{
             parseExpression(off, res);
             if(!match(Token(")"))) return false;
             // TODO
+            assert(0);
             ++level;
             int newOffset = level * 4 + 12;
             if(parseCodeBlock(newOffset, funSymbol)) return false;
             // TODO
+            assert(0);
             --level;
             return true;
         }
@@ -577,14 +704,14 @@ namespace parser{
                 TempSymbol res;
                 if(!parseExpression(off, res)) return false;
                 if(funSymbol.type == &VOID){
-                    addErrNow("The Void function needs to return a value.");
+                    addErrNow("The Void function don't needs to return a value.");
                     return false;
                 }
                 // TODO: 优化传值
                 res = toLocal(res, off);
                 mov("DS", 0, 4);
                 mov("BX", 4, 4);
-                mov("ES", "BX", "DS", std::get<std::pair<int, int>>(res.ptr).second, res.type->size());
+                mov("ES", "BX", "DS", std::get<std::pair<int, int> >(res.ptr).second, res.type->size());
             }
             mov("BX", 8, 4);
             mov("DS", 0, 4);
@@ -739,17 +866,9 @@ namespace parser{
         bool parseLogicAndExpr(int &off, TempSymbol &res) {
             TempSymbol lhs;
             if(!parseLogicNotExpr(off, lhs)) return false;
-            if(lhs.type != &BOOL){
-                addImplicitTypeConversionWarn();
-                lhs = typeConversion(lhs, &BOOL, off);
-            }
             while(match(Token("&&"))){
                 TempSymbol rhs;
                 if(!parseLogicNotExpr(off, rhs)) return false;
-                if(rhs.type != &BOOL){
-                    addImplicitTypeConversionWarn();
-                    rhs = typeConversion(rhs, &BOOL, off);
-                }
                 lhs = handleLogicAnd(lhs, rhs, off);
             }
             res = lhs;
@@ -760,17 +879,9 @@ namespace parser{
         bool parseLogicOrExpr(int &off, TempSymbol &res) {
             TempSymbol lhs;
             if(!parseLogicAndExpr(off, lhs)) return false;
-            if(lhs.type != &BOOL){
-                addImplicitTypeConversionWarn();
-                lhs = typeConversion(lhs, &BOOL, off);
-            }
             while(match(Token("||"))){
                 TempSymbol rhs;
                 if(!parseLogicAndExpr(off, rhs)) return false;
-                if(rhs.type != &BOOL){
-                    addImplicitTypeConversionWarn();
-                    rhs = typeConversion(rhs, &BOOL, off);
-                }
                 lhs = handleLogicOr(lhs, rhs, off);
             }
             res = lhs;
@@ -1011,8 +1122,8 @@ namespace parser{
         // 处理 <程序>
         bool parseProgram() {
             symbolTableStack.emplace_back();
+            const int STACK_ALLOC = static_cast<int>(ans.size());
             ans.emplace_back("STACK_ALLOC", "0");
-            const int STACK_ALLOC = static_cast<int>(ans.size()) - 1;
             level = 0;
             if(int off = 0; !parseDefStmtList(off)){
                 return false;

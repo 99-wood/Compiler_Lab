@@ -4,6 +4,8 @@
 
 #include "symbol.h"
 
+#include <utility>
+
 namespace symbol{
     bool isTypeToken(const Token &token) {
         return token == Token("Int") || token == Token("Float") || token == Token("Char") ||
@@ -47,6 +49,10 @@ namespace symbol{
         //     else if(type == &BOOL) /*ptr.CB = symbol.ptr.CB*/;
         //     else throw std::runtime_error("Wrong type");
         // }
+    }
+
+    TempSymbol::TempSymbol(const SymbolType *type, const SymbolKind &kind,
+                           SymbolInfoPtr ptr) : type(type), kind(kind), ptr(std::move(ptr)) {
     }
 
     int TempSymbol::getVal() const {
