@@ -198,17 +198,17 @@ namespace parser {
         }
 
         [[nodiscard]] static string offsetToString(const int off, const int size) {
-            return "[DS + " + std::to_string(off) + ", " + std::to_string(size) + "]";
+            return "[DS + " + std::to_string(off) + ": " + std::to_string(size) + "]";
         }
 
         static string addrToString(const string &sreg, const string &breg, const int off, const int size) {
             assert(sreg == "DS" || sreg == "ES");
             assert(breg == "BX");
             if (off == 0) {
-                return "[" + sreg + " + " + breg + ", " + std::to_string(size) + "]";
+                return "[" + sreg + " + " + breg + ": " + std::to_string(size) + "]";
             }
             else {
-                return "[" + sreg + " + " + breg + " + " + std::to_string(off) + ", " + std::to_string(size) + "]";
+                return "[" + sreg + " + " + breg + " + " + std::to_string(off) + ": " + std::to_string(size) + "]";
             }
         }
 
@@ -218,7 +218,7 @@ namespace parser {
                 return "[" + sreg + ", " + std::to_string(size) + "]";
             }
             else {
-                return "[" + sreg + " + " + std::to_string(off) + ", " + std::to_string(size) + "]";
+                return "[" + sreg + " + " + std::to_string(off) + ": " + std::to_string(size) + "]";
             }
         }
 
