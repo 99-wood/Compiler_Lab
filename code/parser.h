@@ -520,13 +520,13 @@ namespace parser {
                         ans.emplace_back("ADDF",
                                          offsetToString(std::get<std::pair<int, int>>(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int>>(y.ptr).second, FLOAT.size()),
-                                         std::to_string(tmp));
+                                         offsetToString(tmp, FLOAT.size()));
                     }
                     else{
                         ans.emplace_back("DELF",
                                          offsetToString(std::get<std::pair<int, int>>(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int>>(y.ptr).second, FLOAT.size()),
-                                         std::to_string(tmp));
+                                         offsetToString(tmp, FLOAT.size()));
                     }
                     return {&FLOAT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
                 }
@@ -548,13 +548,13 @@ namespace parser {
                         ans.emplace_back("ADD",
                                          offsetToString(std::get<std::pair<int, int>>(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int>>(y.ptr).second, INT.size()),
-                                         std::to_string(tmp));
+                                         offsetToString(tmp, INT.size()));
                     }
                     else{
                         ans.emplace_back("DEL",
                                          offsetToString(std::get<std::pair<int, int>>(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int>>(y.ptr).second, INT.size()),
-                                         std::to_string(tmp));
+                                         offsetToString(tmp, INT.size()));
                     }
                     return {&INT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
                 }
@@ -585,13 +585,13 @@ namespace parser {
                         ans.emplace_back("MULF",
                                          offsetToString(std::get<std::pair<int, int>>(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int>>(y.ptr).second, FLOAT.size()),
-                                         std::to_string(tmp));
+                                         offsetToString(tmp, FLOAT.size()));
                     }
                     else{
                         ans.emplace_back("DIVF",
                                          offsetToString(std::get<std::pair<int, int>>(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int>>(y.ptr).second, FLOAT.size()),
-                                         std::to_string(tmp));
+                                         offsetToString(tmp, FLOAT.size()));
                     }
                     return {&FLOAT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
                 }
@@ -619,13 +619,13 @@ namespace parser {
                         ans.emplace_back("MUL",
                                          offsetToString(std::get<std::pair<int, int>>(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int>>(y.ptr).second, INT.size()),
-                                         std::to_string(tmp));
+                                         offsetToString(tmp, INT.size()));
                     }
                     else{
                         ans.emplace_back("DIV",
                                          offsetToString(std::get<std::pair<int, int>>(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int>>(y.ptr).second, INT.size()),
-                                         std::to_string(tmp));
+                                         offsetToString(tmp, INT.size()));
                     }
                     return {&INT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
                 }
