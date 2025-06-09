@@ -63,12 +63,12 @@ namespace symbol{
     constexpr SymbolType BOOL{TVAL::Bool, {nullptr}};
     constexpr SymbolType VOID{TVAL::Void, {nullptr}};
 
-    using SymbolTypeTable = vector<SymbolType>;
+//    using SymbolTypeTable = vector<SymbolType>;
 
-    inline SymbolTypeTable symbolTypeTable{INT, FLOAT, CHAR, BOOL, VOID};
+//    inline SymbolTypeTable{INT, FLOAT, CHAR, BOOL, VOID};
 
     bool isTypeToken(const Token &token);
-    const SymbolType* tokenToType(const Token &token);
+//    const SymbolType* tokenToType(const Token &token);
 
     enum class SymbolKind {
         FUN, PROCESS, CONST, TYPE, VAR, VAL

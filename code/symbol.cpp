@@ -12,14 +12,14 @@ namespace symbol{
                token == Token("Bool") || token == Token("Void");
     }
 
-    const SymbolType *tokenToType(const Token &token) {
-        if(token == Token("Int")) return &INT;
-        if(token == Token("Float")) return &FLOAT;
-        if(token == Token("Char")) return &CHAR;
-        if(token == Token("Bool")) return &BOOL;
-        if(token == Token("Void")) return &VOID;
-        throw std::runtime_error("Wrong on Token to Type");
-    }
+//    const SymbolType *tokenToType(const Token &token) {
+//        if(token == Token("Int")) return &INT;
+//        if(token == Token("Float")) return &FLOAT;
+//        if(token == Token("Char")) return &CHAR;
+//        if(token == Token("Bool")) return &BOOL;
+//        if(token == Token("Void")) return &VOID;
+//        throw std::runtime_error("Wrong on Token to Type");
+//    }
 
     TVAL tokenToTVAL(const Token &tk) {
         if(tk.type != lexer::TokenType::K){
@@ -57,10 +57,10 @@ namespace symbol{
 
     int TempSymbol::getVal() const {
         if(kind != SymbolKind::CONST) throw std::runtime_error("not a const number.");
-        if(type == &INT) return std::get<int>(ptr);
-        else if(type == &FLOAT) return std::bit_cast<int>(std::get<float>(ptr));
-        else if(type == &CHAR) return static_cast<int>(std::get<char>(ptr));
-        else if(type == &BOOL) return static_cast<int>(std::get<bool>(ptr));
+        if(type->type == TVAL::Int) return std::get<int>(ptr);
+        else if(type->type == TVAL::Float) return std::bit_cast<int>(std::get<float>(ptr));
+        else if(type->type == TVAL::Char) return static_cast<int>(std::get<char>(ptr));
+        else if(type->type == TVAL::Bool) return static_cast<int>(std::get<bool>(ptr));
         else throw std::runtime_error("Wrong type on get const val.");
     }
 
