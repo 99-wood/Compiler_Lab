@@ -2,5 +2,6 @@ var a, b : Int;
 fun main() : Int {
     var a, b : Int;
     var c, d : Float;
-    a = a + b;
+    a = b;
+    a = b;
 }

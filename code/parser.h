@@ -450,6 +450,7 @@ namespace parser {
 
         // 移动到当前段，影响 ES
         TempSymbol toLocal(const TempSymbol &symbol, int &off) {
+            assert(symbol.kind == SymbolKind::CONST || symbol.kind == SymbolKind::VAL || symbol.kind == SymbolKind::VAR);
             if (symbol.type == &VOID) {
                 throw std::runtime_error("Cannot trans Void to local.");
             }
@@ -462,6 +463,7 @@ namespace parser {
                 return {symbol.type, SymbolKind::CONST, std::pair<int, int>(level, tmp)};
             }
             else {
+                if(std::get<std::pair<int, int>>(symbol.ptr).first == level) return symbol;
                 const int tmp = off;
                 off += symbol.type->size();
                 auto [lv, of] = std::get<std::pair<int, int> >(symbol.ptr);
