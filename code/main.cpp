@@ -18,6 +18,8 @@ std::string readFileToString(const std::string& fileName) {
     return buffer.str();
 }
 int main() {
+    double a = 1.0, b = 0;
+    cout << (a / b);
     const string code = readFileToString(string("..\\test.txt"));
     vector<lexer::Token> ans;
     vector<string> err;

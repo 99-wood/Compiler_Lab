@@ -11,7 +11,7 @@
 #include "lexer.h"
 #include "symbol.h"
 
-namespace parser{
+namespace parser {
     using std::string;
     using std::vector;
     using lexer::Token;
@@ -27,10 +27,10 @@ namespace parser{
 
         friend std::ostream &operator<<(std::ostream &os, const Quad &q) {
             return os << "(" << q.op
-                   << ", " << (q.arg1.empty() ? "_" : q.arg1)
-                   << ", " << (q.arg2.empty() ? "_" : q.arg2)
-                   << ", " << (q.result.empty() ? "_" : q.result)
-                   << ")";
+                      << ", " << (q.arg1.empty() ? "_" : q.arg1)
+                      << ", " << (q.arg2.empty() ? "_" : q.arg2)
+                      << ", " << (q.result.empty() ? "_" : q.result)
+                      << ")";
         }
     };
 
@@ -100,58 +100,58 @@ namespace parser{
         }
 
         [[nodiscard]] bool expect(const Token &tk) const {
-            if(ptr == str.end()) return false;
+            if (ptr == str.end()) return false;
             return *ptr == tk;
         }
 
         [[nodiscard]] bool expect(const lexer::TokenType &tp) const {
-            if(ptr == str.end()) return false;
+            if (ptr == str.end()) return false;
             return ptr->type == tp;
         }
 
         [[nodiscard]] bool expect(bool (Parser::*f)(const Token &) const) {
-            if(ptr == str.end()) return false;
+            if (ptr == str.end()) return false;
             return (this->*f)(*ptr);
         }
 
         [[nodiscard]] bool match(const Token &tk) {
-            if(ptr == str.end()) return false;
-            if(*ptr != tk) return false;
-            else{
+            if (ptr == str.end()) return false;
+            if (*ptr != tk) return false;
+            else {
                 ++ptr;
                 return true;
             }
         }
 
         [[nodiscard]] bool match(const lexer::TokenType &tp) {
-            if(ptr == str.end()) return false;
-            if(ptr->type != tp) return false;
-            else{
+            if (ptr == str.end()) return false;
+            if (ptr->type != tp) return false;
+            else {
                 ++ptr;
                 return true;
             }
         }
 
         [[nodiscard]] bool match(bool (Parser::*f)(const Token &) const) {
-            if(ptr == str.end()) return false;
-            if(!(this->*f)(*ptr)) return false;
+            if (ptr == str.end()) return false;
+            if (!(this->*f)(*ptr)) return false;
             ++ptr;
             return true;
         }
 
         static const SymbolType *tokenToType(const Token &token) {
-            if(token == Token("Int")) return &INT;
-            if(token == Token("Float")) return &FLOAT;
-            if(token == Token("Char")) return &CHAR;
-            if(token == Token("Bool")) return &BOOL;
-            if(token == Token("Void")) return &VOID;
+            if (token == Token("Int")) return &INT;
+            if (token == Token("Float")) return &FLOAT;
+            if (token == Token("Char")) return &CHAR;
+            if (token == Token("Bool")) return &BOOL;
+            if (token == Token("Void")) return &VOID;
             throw std::runtime_error("Wrong on Token to Type");
         }
 
         // 是否为变量标识符
         [[nodiscard]] bool isVarIdentifier(const Token &token) const {
-            for(const auto &symbolTable : std::views::reverse(symbolTableStack)){
-                if(auto it = symbolTable.findByToken(token); it != symbolTable.end() && it->kind == SymbolKind::VAR)
+            for (const auto &symbolTable: std::views::reverse(symbolTableStack)) {
+                if (auto it = symbolTable.findByToken(token); it != symbolTable.end() && it->kind == SymbolKind::VAR)
                     return true;
             }
             return false;
@@ -159,8 +159,8 @@ namespace parser{
 
         // 是否为常量标识符
         [[nodiscard]] bool isValIdentifier(const Token &token) const {
-            for(const auto &symbolTable : std::views::reverse(symbolTableStack)){
-                if(auto it = symbolTable.findByToken(token); it != symbolTable.end() && it->kind == SymbolKind::VAL)
+            for (const auto &symbolTable: std::views::reverse(symbolTableStack)) {
+                if (auto it = symbolTable.findByToken(token); it != symbolTable.end() && it->kind == SymbolKind::VAL)
                     return true;
             }
             return false;
@@ -168,8 +168,8 @@ namespace parser{
 
         // 是否为函数标识符
         [[nodiscard]] bool isFuncIdentifier(const Token &token) const {
-            for(const auto &symbolTable : std::views::reverse(symbolTableStack)){
-                if(auto it = symbolTable.findByToken(token); it != symbolTable.end() && it->kind == SymbolKind::FUN)
+            for (const auto &symbolTable: std::views::reverse(symbolTableStack)) {
+                if (auto it = symbolTable.findByToken(token); it != symbolTable.end() && it->kind == SymbolKind::FUN)
                     return true;
             }
             return false;
@@ -177,8 +177,8 @@ namespace parser{
 
         // 获取标识符信息
         [[nodiscard]] Symbol getIdentifier(const Token &token) const {
-            for(const auto &symbolTable : symbolTableStack | std::views::reverse){
-                if(auto it = symbolTable.findByToken(token); it != symbolTable.end()) return *it;
+            for (const auto &symbolTable: symbolTableStack | std::views::reverse) {
+                if (auto it = symbolTable.findByToken(token); it != symbolTable.end()) return *it;
             }
             throw std::runtime_error("cannot find the token");
         }
@@ -204,20 +204,20 @@ namespace parser{
         static string addrToString(const string &sreg, const string &breg, const int off, const int size) {
             assert(sreg == "DS" || sreg == "ES");
             assert(breg == "BX");
-            if(off == 0){
+            if (off == 0) {
                 return "[" + sreg + " + " + breg + ", " + std::to_string(size) + "]";
             }
-            else{
+            else {
                 return "[" + sreg + " + " + breg + " + " + std::to_string(off) + ", " + std::to_string(size) + "]";
             }
         }
 
         static string addrToString(const string &sreg, const int off, const int size) {
             assert(sreg == "DS" || sreg == "ES");
-            if(off == 0){
+            if (off == 0) {
                 return "[" + sreg + ", " + std::to_string(size) + "]";
             }
-            else{
+            else {
                 return "[" + sreg + " + " + std::to_string(off) + ", " + std::to_string(size) + "]";
             }
         }
@@ -225,24 +225,24 @@ namespace parser{
         void push(const string &reg, int &off) {
             assert(reg == "BX" || reg == "DS" || reg == "ES");
             ans.emplace_back(
-                "MOV",
-                reg,
-                offsetToString(off, 4));
+                    "MOV",
+                    reg,
+                    offsetToString(off, 4));
             off += 4;
         }
 
         void pop(const string &reg, const int off) {
             assert(reg == "BX" || reg == "DS" || reg == "ES");
             ans.emplace_back(
-                "MOV",
-                offsetToString(off, 4),
-                reg);
+                    "MOV",
+                    offsetToString(off, 4),
+                    reg);
         }
 
         void mov(const string &dest, const string &src, const int size) {
             assert(dest == "BX" || dest == "DS" || dest == "ES");
             assert(src == "BX" || src == "DS" || dest == "ES");
-            if(dest == src) return;
+            if (dest == src) return;
             assert(size == 4);
             ans.emplace_back("MOV", src, dest);
         }
@@ -250,25 +250,25 @@ namespace parser{
         void mov(const string &reg, const int &src, const int size) {
             assert(reg == "BX" || reg == "DS" || reg == "ES");
             ans.emplace_back(
-                "MOV",
-                offsetToString(src, size),
-                reg);
+                    "MOV",
+                    offsetToString(src, size),
+                    reg);
         }
 
         void mov(const int &dest, const string &reg, const int size) {
             assert(reg == "BX" || reg == "DS");
             ans.emplace_back(
-                "MOV",
-                reg,
-                offsetToString(dest, size));
+                    "MOV",
+                    reg,
+                    offsetToString(dest, size));
         }
 
         void mov(const std::pair<int, int> &dest, const string &reg, const int size, int &off) {
             assert(reg == "BX" || reg == "DS");
             auto [dlv, doff] = dest;
-            if(dlv == level) return mov(doff, reg, size);
-            else{
-                if(reg == "DS"){
+            if (dlv == level) return mov(doff, reg, size);
+            else {
+                if (reg == "DS") {
                     const int tmp = off;
                     off += 4;
                     push("BX", off);
@@ -278,7 +278,7 @@ namespace parser{
                     mov("DS", "BX", 4);
                     pop("BX", tmp);
                 }
-                else{
+                else {
                     const int tmp = off;
                     off += 4;
                     push("ES", off);
@@ -295,8 +295,8 @@ namespace parser{
         void mov(const string &reg, const std::pair<int, int> &src, const int size, int &off) {
             assert(reg == "BX");
             auto [slv, soff] = src;
-            if(slv == level) return mov(reg, soff, size);
-            else{
+            if (slv == level) return mov(reg, soff, size);
+            else {
                 int tmp = off;
                 push("ES", off);
                 mov("ES", "DS", 4);
@@ -315,8 +315,8 @@ namespace parser{
         // [偏移量] <- [地址]
         void mov(const int dest, const std::pair<int, int> &src, const int size, int &off) {
             auto [slv, soff] = src;
-            if(slv == level) return mov(dest, soff, size);
-            else{
+            if (slv == level) return mov(dest, soff, size);
+            else {
                 mov("BX", src, size, off);
                 mov(dest, "BX", size);
             }
@@ -324,13 +324,13 @@ namespace parser{
 
         // [偏移量] <- 临时变量
         void mov(const int dest, const TempSymbol &src, int &off) {
-            if(src.type == &VOID) throw std::runtime_error("Cannot move Void.");
-            if(src.kind == SymbolKind::CONST){
+            if (src.type == &VOID) throw std::runtime_error("Cannot move Void.");
+            if (src.kind == SymbolKind::CONST) {
                 ans.emplace_back("MOV",
                                  std::to_string(src.getVal()),
                                  offsetToString(dest, src.type->size()));
             }
-            else{
+            else {
                 assert(src.kind == SymbolKind::VAL || src.kind == SymbolKind::VAR);
                 mov(dest, std::pair<int, int>(std::get<std::pair<int, int> >(src.ptr)), src.type->size(), off);
             }
@@ -358,26 +358,26 @@ namespace parser{
             assert(dest.type != &VOID);
             assert(src.type != &VOID);
             assert(dest.kind == SymbolKind::VAR);
-            if(src.type != dest.type){
+            if (src.type != dest.type) {
                 addImplicitTypeConversionWarn();
-                src = typeConversion(dest, dest.type, off);
+                src = typeConversion(src, dest.type, off);
             }
             const auto [lv, of] = std::get<std::pair<int, int>>(dest.ptr);
-            if(src.kind == SymbolKind::CONST){
-                if(lv < level) mov("ES", 12 + lv * 4, 4);
+            if (src.kind == SymbolKind::CONST) {
+                if (lv < level) mov("ES", 12 + lv * 4, 4);
                 else mov("ES", "DS", 4);
                 ans.emplace_back("MOV",
                                  std::to_string(src.getVal()),
-                                 addrToString("ES", of, src.type->size()));
+                                 addrToString("ES", of, dest.type->size()));
                 return;
             }
-            else{
+            else {
                 src = toLocal(src, off);
-                if(lv < level) mov("ES", 12 + lv * 4, 4);
+                if (lv < level) mov("ES", 12 + lv * 4, 4);
                 else mov("ES", "DS", 4);
                 ans.emplace_back("MOV",
-                                 addrToString("ES", of, src.type->size()),
-                                 std::to_string(std::get<std::pair<int, int>>(src.ptr).second));
+                                 offsetToString(std::get<std::pair<int, int>>(src.ptr).second, src.type->size()),
+                                 addrToString("ES", of, src.type->size()));
                 return;
             }
         }
@@ -385,50 +385,51 @@ namespace parser{
         // 类型转换，影响 ES
         TempSymbol typeConversion(const TempSymbol &symbol, const SymbolType *type, int &off) {
             assert(
-                symbol.kind == SymbolKind::CONST || symbol.kind == SymbolKind::VAL || symbol.kind == SymbolKind::VAR);
-            if(symbol.type == type) return symbol;
-            if(symbol.type == &VOID){
+                    symbol.kind == SymbolKind::CONST || symbol.kind == SymbolKind::VAL ||
+                    symbol.kind == SymbolKind::VAR);
+            if (symbol.type == type) return symbol;
+            if (symbol.type == &VOID) {
                 throw std::runtime_error("Cannot trans Void.");
             }
-            if(type == &VOID){
+            if (type == &VOID) {
                 throw std::runtime_error("Cannot trans to Void.");
             }
-            if(symbol.kind == SymbolKind::CONST){
+            if (symbol.kind == SymbolKind::CONST) {
                 TempSymbol res;
                 res.type = type;
                 res.kind = SymbolKind::CONST;
-                if(type == &INT){
-                    if(symbol.type == &INT) res.ptr = static_cast<int>(std::get<int>(symbol.ptr));
-                    else if(symbol.type == &FLOAT) res.ptr = static_cast<int>(std::get<float>(symbol.ptr));
-                    else if(symbol.type == &CHAR) res.ptr = static_cast<int>(std::get<char>(symbol.ptr));
-                    else if(symbol.type == &BOOL) res.ptr = static_cast<int>(std::get<bool>(symbol.ptr));
+                if (type == &INT) {
+                    if (symbol.type == &INT) res.ptr = static_cast<int>(std::get<int>(symbol.ptr));
+                    else if (symbol.type == &FLOAT) res.ptr = static_cast<int>(std::get<float>(symbol.ptr));
+                    else if (symbol.type == &CHAR) res.ptr = static_cast<int>(std::get<char>(symbol.ptr));
+                    else if (symbol.type == &BOOL) res.ptr = static_cast<int>(std::get<bool>(symbol.ptr));
                     else throw std::runtime_error("Wrong type.");
                 }
-                else if(type == &FLOAT){
-                    if(symbol.type == &INT) res.ptr = static_cast<float>(std::get<int>(symbol.ptr));
-                    else if(symbol.type == &FLOAT) res.ptr = static_cast<float>(std::get<float>(symbol.ptr));
-                    else if(symbol.type == &CHAR) res.ptr = static_cast<float>(std::get<char>(symbol.ptr));
-                    else if(symbol.type == &BOOL) res.ptr = static_cast<float>(std::get<bool>(symbol.ptr));
+                else if (type == &FLOAT) {
+                    if (symbol.type == &INT) res.ptr = static_cast<float>(std::get<int>(symbol.ptr));
+                    else if (symbol.type == &FLOAT) res.ptr = static_cast<float>(std::get<float>(symbol.ptr));
+                    else if (symbol.type == &CHAR) res.ptr = static_cast<float>(std::get<char>(symbol.ptr));
+                    else if (symbol.type == &BOOL) res.ptr = static_cast<float>(std::get<bool>(symbol.ptr));
                     else throw std::runtime_error("Wrong type.");
                 }
-                else if(type == &CHAR){
-                    if(symbol.type == &INT) res.ptr = static_cast<char>(std::get<int>(symbol.ptr));
-                    else if(symbol.type == &FLOAT) res.ptr = static_cast<char>(std::get<float>(symbol.ptr));
-                    else if(symbol.type == &CHAR) res.ptr = static_cast<char>(std::get<char>(symbol.ptr));
-                    else if(symbol.type == &BOOL) res.ptr = static_cast<char>(std::get<bool>(symbol.ptr));
+                else if (type == &CHAR) {
+                    if (symbol.type == &INT) res.ptr = static_cast<char>(std::get<int>(symbol.ptr));
+                    else if (symbol.type == &FLOAT) res.ptr = static_cast<char>(std::get<float>(symbol.ptr));
+                    else if (symbol.type == &CHAR) res.ptr = static_cast<char>(std::get<char>(symbol.ptr));
+                    else if (symbol.type == &BOOL) res.ptr = static_cast<char>(std::get<bool>(symbol.ptr));
                     else throw std::runtime_error("Wrong type.");
                 }
-                else if(type == &BOOL){
-                    if(symbol.type == &INT) res.ptr = static_cast<bool>(std::get<int>(symbol.ptr));
-                    else if(symbol.type == &FLOAT) res.ptr = static_cast<bool>(std::get<float>(symbol.ptr));
-                    else if(symbol.type == &CHAR) res.ptr = static_cast<bool>(std::get<char>(symbol.ptr));
-                    else if(symbol.type == &BOOL) res.ptr = static_cast<bool>(std::get<bool>(symbol.ptr));
+                else if (type == &BOOL) {
+                    if (symbol.type == &INT) res.ptr = static_cast<bool>(std::get<int>(symbol.ptr));
+                    else if (symbol.type == &FLOAT) res.ptr = static_cast<bool>(std::get<float>(symbol.ptr));
+                    else if (symbol.type == &CHAR) res.ptr = static_cast<bool>(std::get<char>(symbol.ptr));
+                    else if (symbol.type == &BOOL) res.ptr = static_cast<bool>(std::get<bool>(symbol.ptr));
                     else throw std::runtime_error("Wrong type.");
                 }
                 else throw std::runtime_error("Wrong type.");
                 return res;
             }
-            else{
+            else {
                 TempSymbol res;
                 res.type = type;
                 res.kind = SymbolKind::VAR;
@@ -449,10 +450,10 @@ namespace parser{
 
         // 移动到当前段，影响 ES
         TempSymbol toLocal(const TempSymbol &symbol, int &off) {
-            if(symbol.type == &VOID){
+            if (symbol.type == &VOID) {
                 throw std::runtime_error("Cannot trans Void to local.");
             }
-            if(symbol.kind == SymbolKind::CONST){
+            if (symbol.kind == SymbolKind::CONST) {
                 const int tmp = off;
                 off += symbol.type->size();
                 ans.emplace_back("MOV",
@@ -460,7 +461,7 @@ namespace parser{
                                  offsetToString(tmp, symbol.type->size()));
                 return {symbol.type, SymbolKind::CONST, std::pair<int, int>(level, tmp)};
             }
-            else{
+            else {
                 const int tmp = off;
                 off += symbol.type->size();
                 auto [lv, of] = std::get<std::pair<int, int> >(symbol.ptr);
@@ -500,29 +501,135 @@ namespace parser{
         TempSymbol handleAddOrSub(TempSymbol x, TempSymbol y, const Token &token, int &off) {
             assert(x.type != &VOID);
             assert(y.type != &VOID);
-            if(x.type != y.type) addImplicitTypeConversionWarn();
+            if (x.type != y.type) addImplicitTypeConversionWarn();
             assert(token == Token("+") || token == Token("-"));
             bool isAdd = (token == Token("+"));
-            if(x.type == &FLOAT || y.type == &FLOAT){
+            if (x.type == &FLOAT || y.type == &FLOAT) {
                 x = typeConversion(x, &FLOAT, off);
                 y = typeConversion(y, &FLOAT, off);
-                if(x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST){
-                    if(isAdd) return {&FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) + std::get<float>(y.ptr)};
+                if (x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST) {
+                    if (isAdd) return {&FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) + std::get<float>(y.ptr)};
                     else return {&FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) - std::get<float>(y.ptr)};
                 }
                 else {
                     x = toLocal(x, off);
                     y = toLocal(y, off);
-//                    ans.emplace_back("ADDF", )
+                    const int tmp = off;
+                    off += FLOAT.size();
+                    if(isAdd){
+                        ans.emplace_back("ADDF",
+                                         offsetToString(std::get<std::pair<int, int>>(x.ptr).second, FLOAT.size()),
+                                         offsetToString(std::get<std::pair<int, int>>(y.ptr).second, FLOAT.size()),
+                                         std::to_string(tmp));
+                    }
+                    else{
+                        ans.emplace_back("DELF",
+                                         offsetToString(std::get<std::pair<int, int>>(x.ptr).second, FLOAT.size()),
+                                         offsetToString(std::get<std::pair<int, int>>(y.ptr).second, FLOAT.size()),
+                                         std::to_string(tmp));
+                    }
+                    return {&FLOAT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
                 }
-
+            }
+            else{
+                if(x.type != &INT || y.type != &INT) addImplicitTypeConversionWarn();
+                x = typeConversion(x, &INT, off);
+                y = typeConversion(y, &INT, off);
+                if (x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST) {
+                    if (isAdd) return {&INT, SymbolKind::CONST, std::get<int>(x.ptr) + std::get<int>(y.ptr)};
+                    else return {&INT, SymbolKind::CONST, std::get<int>(x.ptr) - std::get<int>(y.ptr)};
+                }
+                else {
+                    x = toLocal(x, off);
+                    y = toLocal(y, off);
+                    const int tmp = off;
+                    off += INT.size();
+                    if(isAdd){
+                        ans.emplace_back("ADD",
+                                         offsetToString(std::get<std::pair<int, int>>(x.ptr).second, INT.size()),
+                                         offsetToString(std::get<std::pair<int, int>>(y.ptr).second, INT.size()),
+                                         std::to_string(tmp));
+                    }
+                    else{
+                        ans.emplace_back("DEL",
+                                         offsetToString(std::get<std::pair<int, int>>(x.ptr).second, INT.size()),
+                                         offsetToString(std::get<std::pair<int, int>>(y.ptr).second, INT.size()),
+                                         std::to_string(tmp));
+                    }
+                    return {&INT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
+                }
             }
         }
 
         // 处理乘除运算
-        TempSymbol handleMulOrDiv(const TempSymbol &x, const TempSymbol &y, const Token &token, int &off) {
-
-            assert(0);
+        TempSymbol handleMulOrDiv(TempSymbol x, TempSymbol y, const Token &token, int &off, bool &isSuccess) {
+            isSuccess = true;
+            assert(x.type != &VOID);
+            assert(y.type != &VOID);
+            if (x.type != y.type) addImplicitTypeConversionWarn();
+            assert(token == Token("*") || token == Token("/"));
+            bool isMul = (token == Token("*"));
+            if (x.type == &FLOAT || y.type == &FLOAT) {
+                x = typeConversion(x, &FLOAT, off);
+                y = typeConversion(y, &FLOAT, off);
+                if (x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST) {
+                    if (isMul) return {&FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) * std::get<float>(y.ptr)};
+                    else return {&FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) / std::get<float>(y.ptr)};
+                }
+                else {
+                    x = toLocal(x, off);
+                    y = toLocal(y, off);
+                    const int tmp = off;
+                    off += FLOAT.size();
+                    if(isMul){
+                        ans.emplace_back("MULF",
+                                         offsetToString(std::get<std::pair<int, int>>(x.ptr).second, FLOAT.size()),
+                                         offsetToString(std::get<std::pair<int, int>>(y.ptr).second, FLOAT.size()),
+                                         std::to_string(tmp));
+                    }
+                    else{
+                        ans.emplace_back("DIVF",
+                                         offsetToString(std::get<std::pair<int, int>>(x.ptr).second, FLOAT.size()),
+                                         offsetToString(std::get<std::pair<int, int>>(y.ptr).second, FLOAT.size()),
+                                         std::to_string(tmp));
+                    }
+                    return {&FLOAT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
+                }
+            }
+            else{
+                if(x.type != &INT || y.type != &INT) addImplicitTypeConversionWarn();
+                x = typeConversion(x, &INT, off);
+                y = typeConversion(y, &INT, off);
+                if (x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST) {
+                    if (isMul) return {&INT, SymbolKind::CONST, std::get<int>(x.ptr) * std::get<int>(y.ptr)};
+                    else{
+                        if(std::get<int>(y.ptr) == 0){
+                            isSuccess = false;
+                            return {};
+                        }
+                        return {&INT, SymbolKind::CONST, std::get<int>(x.ptr) / std::get<int>(y.ptr)};
+                    }
+                }
+                else {
+                    x = toLocal(x, off);
+                    y = toLocal(y, off);
+                    const int tmp = off;
+                    off += INT.size();
+                    if(isMul){
+                        ans.emplace_back("MUL",
+                                         offsetToString(std::get<std::pair<int, int>>(x.ptr).second, INT.size()),
+                                         offsetToString(std::get<std::pair<int, int>>(y.ptr).second, INT.size()),
+                                         std::to_string(tmp));
+                    }
+                    else{
+                        ans.emplace_back("DIV",
+                                         offsetToString(std::get<std::pair<int, int>>(x.ptr).second, INT.size()),
+                                         offsetToString(std::get<std::pair<int, int>>(y.ptr).second, INT.size()),
+                                         std::to_string(tmp));
+                    }
+                    return {&INT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
+                }
+            }
         }
 
         // 处理函数调用
@@ -535,11 +642,11 @@ namespace parser{
 
         // 处理 <初始化列表后缀'>
         bool parseInitListSuffixTail(int &off) {
-            if(expect(Token(";"))){
+            if (expect(Token(";"))) {
                 next();
                 return true;
             }
-            if(!expect(Token(","))){
+            if (!expect(Token(","))) {
                 addErrNow();
                 return false;
             }
@@ -547,20 +654,20 @@ namespace parser{
             Token name{};
             TempSymbol res{};
             // SymbolTable &symbolTable = symbolTableStack.back();
-            if(expect(lexer::TokenType::I)){
+            if (expect(lexer::TokenType::I)) {
                 name = peek();
-                if(symbolTableStack[level].findByToken(name) != symbolTableStack[level].end()){
+                if (symbolTableStack[level].findByToken(name) != symbolTableStack[level].end()) {
                     addErrNow("Multi define function.");
                     return false;
                 }
                 next();
             }
-            else{
+            else {
                 addErrNow();
                 return false;
             }
-            if(!match(Token("="))) return false;
-            if(!parseExpression(off, res)) return false;
+            if (!match(Token("="))) return false;
+            if (!parseExpression(off, res)) return false;
             symbolTableStack[level].push_back(Symbol{name, res.type, res.kind, std::pair<int, int>(level, off)});
             const int tmp = off;
             off += static_cast<int>(res.type->size());
@@ -573,7 +680,7 @@ namespace parser{
         bool parseInitListSuffix(int &off, const Token &lastToken) {
             assert(match(Token("=")));
             TempSymbol res{};
-            if(!parseExpression(off, res)) return false;
+            if (!parseExpression(off, res)) return false;
             symbolTableStack[level].push_back(Symbol{lastToken, res.type, res.kind, std::pair<int, int>(level, off)});
             const int tmp = off;
             off += static_cast<int>(res.type->size());
@@ -583,41 +690,41 @@ namespace parser{
 
         // 处理 <标识符列表后缀>
         bool parseIdentListSuffix(int &off, vector<Token> &identList) {
-            if(expect(Token(":"))){
+            if (expect(Token(":"))) {
                 next();
-                if(!expect(lexer::TokenType::K)){
+                if (!expect(lexer::TokenType::K)) {
                     addErrNow("Undefined type.");
                     return false;
                 }
                 const Token token = peek();
                 next();
-                if(!isTypeToken(token)){
+                if (!isTypeToken(token)) {
                     addErrNow("Not a type.");
                     return false;
                 }
                 const SymbolType *type = tokenToType(token);
-                for(const Token &name : identList){
-                    if(symbolTableStack[level].findByToken(name) != symbolTableStack[level].end()){
+                for (const Token &name: identList) {
+                    if (symbolTableStack[level].findByToken(name) != symbolTableStack[level].end()) {
                         addErrNow("Multi define.");
                         return false;
                     }
                     symbolTableStack[level].emplace_back(name, type, SymbolKind::VAR, std::pair<int, int>(level, off));
                     off += static_cast<int>(type->size());
                 }
-                if(!match(Token(";"))){
+                if (!match(Token(";"))) {
                     addErrNow("Expect a ';'.");
                     return false;
                 }
                 return true;
             }
-            if(expect(Token(","))){
+            if (expect(Token(","))) {
                 next();
-                if(!expect(lexer::TokenType::I)){
+                if (!expect(lexer::TokenType::I)) {
                     addErrNow();
                     return false;
                 }
                 const Token name = peek();
-                if(symbolTableStack[level].findByToken(name) != symbolTableStack[level].end()){
+                if (symbolTableStack[level].findByToken(name) != symbolTableStack[level].end()) {
                     addErrNow("Multi define function.");
                     return false;
                 }
@@ -631,12 +738,12 @@ namespace parser{
 
         // 处理 <变量定义后缀>
         bool parseVarDefSuffix(int &off, const Token &lastToken) {
-            if(expect(Token("="))) return parseInitListSuffix(off, lastToken);
-            else if(expect(Token(":")) || expect(Token(","))){
+            if (expect(Token("="))) return parseInitListSuffix(off, lastToken);
+            else if (expect(Token(":")) || expect(Token(","))) {
                 vector<Token> identList{lastToken};
                 return parseIdentListSuffix(off, identList);
             }
-            else{
+            else {
                 addErrNow();
                 return false;
             }
@@ -647,15 +754,15 @@ namespace parser{
             assert(match(Token("var")));
             Token name{};
             // SymbolTable &symbolTable = symbolTableStack.back();
-            if(expect(lexer::TokenType::I)){
+            if (expect(lexer::TokenType::I)) {
                 name = peek();
-                if(symbolTableStack[level].findByToken(name) != symbolTableStack[level].end()){
+                if (symbolTableStack[level].findByToken(name) != symbolTableStack[level].end()) {
                     addErrNow("Multi define function.");
                     return false;
                 }
                 next();
             }
-            else{
+            else {
                 addErrNow();
                 return false;
             }
@@ -672,34 +779,34 @@ namespace parser{
         // 处理 <if 语句>
         bool parseIfStmt(int &off, const Symbol &funSymbol) {
             assert(match(Token("if")));
-            if(!match(Token("("))) return false;
+            if (!match(Token("("))) return false;
             TempSymbol res;
             parseExpression(off, res);
-            if(!match(Token(")"))) return false;
+            if (!match(Token(")"))) return false;
             // TODO
             assert(0);
-            if(res.type != &BOOL){
+            if (res.type != &BOOL) {
                 addImplicitTypeConversionWarn();
                 res = typeConversion(res, &BOOL, off);
             }
             const int JZ = static_cast<int>(ans.size());
-            if(res.kind == SymbolKind::CONST){
+            if (res.kind == SymbolKind::CONST) {
                 ans.emplace_back("JZ", std::to_string(res.getVal()), "_");
             }
-            else{
+            else {
                 res = toLocal(res, off);
                 ans.emplace_back("JZ", offsetToString(std::get<std::pair<int, int> >(res.ptr).second, 1), "_");
             }
             ++level;
             int newOffset = level * 4 + 12;
-            if(parseCodeBlock(newOffset, funSymbol)) return false;
+            if (parseCodeBlock(newOffset, funSymbol)) return false;
             ans[JZ].arg2 = std::to_string(ans.size());
-            if(match(Token("else"))){
+            if (match(Token("else"))) {
                 const int JMP = static_cast<int>(ans.size());
                 ans.emplace_back("JZ", "_");
-                if(!parseCodeBlock(newOffset, funSymbol)) return false;
+                if (!parseCodeBlock(newOffset, funSymbol)) return false;
             }
-            else{
+            else {
                 // TODO
                 assert(0);
             }
@@ -712,15 +819,15 @@ namespace parser{
         // 处理 <while 语句>
         bool parseWhileStmt(int &off, const Symbol &funSymbol) {
             assert(match(Token("while")));
-            if(!match(Token("("))) return false;
+            if (!match(Token("("))) return false;
             TempSymbol res;
             parseExpression(off, res);
-            if(!match(Token(")"))) return false;
+            if (!match(Token(")"))) return false;
             // TODO
             assert(0);
             ++level;
             int newOffset = level * 4 + 12;
-            if(parseCodeBlock(newOffset, funSymbol)) return false;
+            if (parseCodeBlock(newOffset, funSymbol)) return false;
             // TODO
             assert(0);
             --level;
@@ -730,17 +837,17 @@ namespace parser{
         // 处理 <return 语句>
         bool parseReturnStmt(int &off, const Symbol &funSymbol) {
             assert(match(Token("return")));
-            if(match(Token(";"))){
-                if(funSymbol.type != &VOID){
+            if (match(Token(";"))) {
+                if (funSymbol.type != &VOID) {
                     addErrNow("The function needs to return a value.");
                     return false;
                 }
                 return true;
             }
-            else{
+            else {
                 TempSymbol res;
-                if(!parseExpression(off, res)) return false;
-                if(funSymbol.type == &VOID){
+                if (!parseExpression(off, res)) return false;
+                if (funSymbol.type == &VOID) {
                     addErrNow("The Void function don't needs to return a value.");
                     return false;
                 }
@@ -763,21 +870,21 @@ namespace parser{
             const Token token = peek();
             next();
             assert(isTypeToken(token));
-            if(!match(Token("("))) return false;
-            if(!parseExpression(off, res)) return false;
-            if(!match(Token(")"))) return false;
+            if (!match(Token("("))) return false;
+            if (!parseExpression(off, res)) return false;
+            if (!match(Token(")"))) return false;
             res = typeConversion(res, tokenToType(token), off);
             return true;
         }
 
         // 处理 <实参列表>
         bool parseArgList(int &off, vector<TempSymbol> &args) {
-            if(expect(Token(")"))) return true;
+            if (expect(Token(")"))) return true;
             TempSymbol arg;
-            if(!parseExpression(off, arg)) return false;
+            if (!parseExpression(off, arg)) return false;
             args.push_back(arg);
-            if(expect(Token(")"))) return true;
-            if(!match(Token(","))){
+            if (expect(Token(")"))) return true;
+            if (!match(Token(","))) {
                 addErrNow();
                 return false;
             }
@@ -790,73 +897,74 @@ namespace parser{
             next();
             assert(isFuncIdentifier(token));
             Symbol funSymbol = getIdentifier(token);
-            if(!match(Token("("))){
+            if (!match(Token("("))) {
                 addErrNow();
                 return false;
             }
             vector<TempSymbol> args;
-            if(!parseArgList(off, args)) return false;
-            if(!match(Token(")"))){
+            if (!parseArgList(off, args)) return false;
+            if (!match(Token(")"))) {
                 addErrNow();
                 return false;
             }
             bool isSuccess;
             res = handleCallFunction(funSymbol, args, off, isSuccess);
-            if(!isSuccess) return false;
+            if (!isSuccess) return false;
             return true;
         }
 
         // 处理 <原子表达式>
         bool parseAtomExpr(int &off, TempSymbol &res) {
-            if(match(Token("("))){
-                if(!parseExpression(off, res)) return false;
+            if (match(Token("("))) {
+                if (!parseExpression(off, res)) return false;
                 return match(Token(")"));
             }
-            else if(expect(Token("Int")) || expect(Token("Float")) || expect(Token("Char")) ||
-                    expect(Token("Bool")) || expect(Token("Void"))){
+            else if (expect(Token("Int")) || expect(Token("Float")) || expect(Token("Char")) ||
+                     expect(Token("Bool")) || expect(Token("Void"))) {
                 return parseTypeCastExpr(off, res);
             }
-            else if(expect(lexer::TokenType::I)){
-                if(expect(&Parser::isVarIdentifier) || expect(&Parser::isValIdentifier)){
+            else if (expect(lexer::TokenType::I)) {
+                if (expect(&Parser::isVarIdentifier) || expect(&Parser::isValIdentifier)) {
                     res = TempSymbol(getIdentifier(peek()));
                     next();
                     return true;
                 }
-                else if(&Parser::isFuncIdentifier){
+                else if (&Parser::isFuncIdentifier) {
                     return parseFuncCallExpr(off, res);
                 }
-                else{
+                else {
                     addErrNow("Undefined identifier.");
                     return false;
                 }
             }
-            else if(expect(lexer::TokenType::CI) || expect(lexer::TokenType::CF) || expect(lexer::TokenType::CC) ||
-                    expect(lexer::TokenType::CB)){
+            else if (expect(lexer::TokenType::CI) || expect(lexer::TokenType::CF) || expect(lexer::TokenType::CC) ||
+                     expect(lexer::TokenType::CB)) {
                 Token token = peek();
                 next();
                 res.kind = SymbolKind::CONST;
-                if(token.type == lexer::TokenType::CI){
+                if (token.type == lexer::TokenType::CI) {
                     res.type = &INT;
                     assert(token.id - 1 <= ci.size());
                     res.ptr = ci[token.id - 1];
                 }
-                else if(token.type == lexer::TokenType::CF){
+                else if (token.type == lexer::TokenType::CF) {
                     res.type = &FLOAT;
                     assert(token.id - 1 <= cf.size());
                     res.ptr = cf[token.id - 1];
                 }
-                else if(token.type == lexer::TokenType::CC){
+                else if (token.type == lexer::TokenType::CC) {
                     res.type = &CHAR;
                     res.ptr = static_cast<char>(token.id);
                 }
-                else if(token.type == lexer::TokenType::CB){
+                else if (token.type == lexer::TokenType::CB) {
                     res.type = &BOOL;
                     res.ptr = (token.id != 0);
                 }
-                else assert(0);
+                else
+                    assert(0);
                 return true;
             }
-            else{
+            else {
                 addErrNow();
                 return false;
             }
@@ -865,13 +973,15 @@ namespace parser{
         // 处理 <项>
         bool parseTerm(int &off, TempSymbol &res) {
             TempSymbol lhs;
-            if(!parseAtomExpr(off, lhs)) return false;
-            while(expect(Token("*")) || expect(Token("/"))){
+            if (!parseAtomExpr(off, lhs)) return false;
+            while (expect(Token("*")) || expect(Token("/"))) {
                 Token token = peek();
                 next();
                 TempSymbol rhs;
-                if(!parseTerm(off, rhs)) return false;
-                lhs = handleMulOrDiv(lhs, rhs, token, off);
+                if (!parseTerm(off, rhs)) return false;
+                bool isSuccess;
+                lhs = handleMulOrDiv(lhs, rhs, token, off, isSuccess);
+                if(!isSuccess) return false;
             }
             res = lhs;
             return true;
@@ -880,12 +990,12 @@ namespace parser{
         // 处理 <算术表达式>
         bool parseArithExpr(int &off, TempSymbol &res) {
             TempSymbol lhs;
-            if(!parseTerm(off, lhs)) return false;
-            while(expect(Token("+")) || expect(Token("-"))){
+            if (!parseTerm(off, lhs)) return false;
+            while (expect(Token("+")) || expect(Token("-"))) {
                 Token token = peek();
                 next();
                 TempSymbol rhs;
-                if(!parseTerm(off, rhs)) return false;
+                if (!parseTerm(off, rhs)) return false;
                 lhs = handleAddOrSub(lhs, rhs, token, off);
             }
             res = lhs;
@@ -895,13 +1005,13 @@ namespace parser{
         // 处理 <关系表达式>
         bool parseRelExpr(int &off, TempSymbol &res) {
             TempSymbol lhs;
-            if(!parseArithExpr(off, lhs)) return false;
-            if(expect(Token(">")) || expect(Token("<")) || expect(Token("==")) || expect(Token(">=")) ||
-               expect(Token("<=")) || expect(Token("!="))){
+            if (!parseArithExpr(off, lhs)) return false;
+            if (expect(Token(">")) || expect(Token("<")) || expect(Token("==")) || expect(Token(">=")) ||
+                expect(Token("<=")) || expect(Token("!="))) {
                 Token token = peek();
                 next();
                 TempSymbol rhs;
-                if(!parseArithExpr(off, rhs)) return false;
+                if (!parseArithExpr(off, rhs)) return false;
                 res = handleRelation(lhs, rhs, token, off);
                 return true;
             }
@@ -911,10 +1021,10 @@ namespace parser{
 
         // 处理 <逻辑非表达式>
         bool parseLogicNotExpr(int &off, TempSymbol &res) {
-            if(match(Token("!"))){
+            if (match(Token("!"))) {
                 TempSymbol rhs;
-                if(!parseRelExpr(off, rhs)) return false;
-                if(rhs.type != &BOOL){
+                if (!parseRelExpr(off, rhs)) return false;
+                if (rhs.type != &BOOL) {
                     addImplicitTypeConversionWarn();
                     rhs = typeConversion(rhs, &BOOL, off);
                 }
@@ -927,10 +1037,10 @@ namespace parser{
         // 处理 <逻辑与表达式>
         bool parseLogicAndExpr(int &off, TempSymbol &res) {
             TempSymbol lhs;
-            if(!parseLogicNotExpr(off, lhs)) return false;
-            while(match(Token("&&"))){
+            if (!parseLogicNotExpr(off, lhs)) return false;
+            while (match(Token("&&"))) {
                 TempSymbol rhs;
-                if(!parseLogicNotExpr(off, rhs)) return false;
+                if (!parseLogicNotExpr(off, rhs)) return false;
                 lhs = handleLogicAnd(lhs, rhs, off);
             }
             res = lhs;
@@ -940,10 +1050,10 @@ namespace parser{
         // 处理 <逻辑或表达式>
         bool parseLogicOrExpr(int &off, TempSymbol &res) {
             TempSymbol lhs;
-            if(!parseLogicAndExpr(off, lhs)) return false;
-            while(match(Token("||"))){
+            if (!parseLogicAndExpr(off, lhs)) return false;
+            while (match(Token("||"))) {
                 TempSymbol rhs;
-                if(!parseLogicAndExpr(off, rhs)) return false;
+                if (!parseLogicAndExpr(off, rhs)) return false;
                 lhs = handleLogicOr(lhs, rhs, off);
             }
             res = lhs;
@@ -957,25 +1067,25 @@ namespace parser{
 
         // 处理 <赋值表达式>
         bool parseAssignExpr(int &off, TempSymbol &res) {
-            if(expect(&Parser::isVarIdentifier)){
+            if (expect(&Parser::isVarIdentifier)) {
                 res = TempSymbol(getIdentifier(peek()));
                 next();
                 assert(res.type != &VOID);
-                if(match(Token("="))){
+                if (match(Token("="))) {
                     TempSymbol src;
-                    if(!parseExpression(off, src)) return false;
-                    if(src.type != res.type){
+                    if (!parseExpression(off, src)) return false;
+                    if (src.type != res.type) {
                         addImplicitTypeConversionWarn();
                         src = typeConversion(src, res.type, off);
                     }
-                    if(src.type == &VOID){
+                    if (src.type == &VOID) {
                         addErrNow("Cannot assign var with Void.");
                         return false;
                     }
                     mov(res, src, off);
                     return true;
                 }
-                else{
+                else {
                     prev();
                 }
             }
@@ -989,36 +1099,36 @@ namespace parser{
 
         // 处理 <表达式语句>
         bool parseExprStmt(int &off, TempSymbol &res) {
-            if(!parseExpression(off, res)) return false;
+            if (!parseExpression(off, res)) return false;
             return match(Token(";"));
         }
 
         // 处理 <语句>
         bool parseStmt(int &off, const Symbol &funSymbol) {
-            if(expect(Token("var"))) return parseVarDefStmt(off);
-            if(expect(Token("val"))) return parseValDefStmt(off);
-            if(expect(Token("if"))) return parseIfStmt(off, funSymbol);
-            if(expect(Token("while"))) return parseWhileStmt(off, funSymbol);
-            if(expect(Token("return"))) return parseReturnStmt(off, funSymbol);
+            if (expect(Token("var"))) return parseVarDefStmt(off);
+            if (expect(Token("val"))) return parseValDefStmt(off);
+            if (expect(Token("if"))) return parseIfStmt(off, funSymbol);
+            if (expect(Token("while"))) return parseWhileStmt(off, funSymbol);
+            if (expect(Token("return"))) return parseReturnStmt(off, funSymbol);
             TempSymbol res{};
             return parseExprStmt(off, res);
         }
 
         // 处理 <语句列表>
         bool parseStmtList(int &off, const Symbol &funSymbol) {
-            if(expect(Token("}"))) return true;
-            if(expect(Token("{"))) return parseCodeBlock(off, funSymbol) && parseStmtList(off, funSymbol);
+            if (expect(Token("}"))) return true;
+            if (expect(Token("{"))) return parseCodeBlock(off, funSymbol) && parseStmtList(off, funSymbol);
             return parseStmt(off, funSymbol) && parseStmtList(off, funSymbol);
         }
 
         // 处理 <代码块>
         bool parseCodeBlock(int &off, const Symbol &funSymbol) {
-            if(!match(Token("{"))){
+            if (!match(Token("{"))) {
                 addErr("Expect '{'.");
                 return false;
             }
-            if(!parseStmtList(off, funSymbol)) return false;
-            if(!match(Token("}"))){
+            if (!parseStmtList(off, funSymbol)) return false;
+            if (!match(Token("}"))) {
                 addErr("Expect '}'.");
                 return false;
             }
@@ -1027,53 +1137,53 @@ namespace parser{
 
         // 处理 <参数列表>
         bool parseParamList(ParamInfo &paramTable, int &off) {
-            if(expect(Token(")"))){
+            if (expect(Token(")"))) {
                 return true;
             }
-            else if(expect(lexer::TokenType::I)){
+            else if (expect(lexer::TokenType::I)) {
                 // SymbolTable &symbolTable = symbolTableStack.back();
                 Token token = peek();
                 const SymbolType *type = nullptr;
-                if(symbolTableStack[level].findByToken(token) != symbolTableStack[level].end()){
+                if (symbolTableStack[level].findByToken(token) != symbolTableStack[level].end()) {
                     addErrNow("Multi define function.");
                     return false;
                 }
                 next();
-                if(!match(Token(":"))){
+                if (!match(Token(":"))) {
                     addErrNow("Expect ':'.");
                     return false;
                 }
-                if(expect(lexer::TokenType::K)){
-                    if(const Token tk = peek(); tk == Token("Int")) type = &INT;
-                    else if(tk == Token("Float")) type = &FLOAT;
-                    else if(tk == Token("Char")) type = &CHAR;
-                    else if(tk == Token("Bool")) type = &BOOL;
-                    else if(tk == Token("Void")){
+                if (expect(lexer::TokenType::K)) {
+                    if (const Token tk = peek(); tk == Token("Int")) type = &INT;
+                    else if (tk == Token("Float")) type = &FLOAT;
+                    else if (tk == Token("Char")) type = &CHAR;
+                    else if (tk == Token("Bool")) type = &BOOL;
+                    else if (tk == Token("Void")) {
                         addErrNow("Param cannot be Void.");
                         return false;
                     }
-                    else{
+                    else {
                         addErrNow("Undefined type.");
                         return false;
                     }
                     next();
                 }
-                else{
+                else {
                     addErrNow("Expect type.");
                     return false;
                 }
-                if(!match(Token(","))){
+                if (!match(Token(","))) {
                     addErrNow("Expect ','.");
                     return false;
                 }
                 symbolTableStack[level].push_back(Symbol{
-                    token, type, SymbolKind::VAL, std::pair<int, int>{level, off}
+                        token, type, SymbolKind::VAL, std::pair<int, int>{level, off}
                 });
                 paramTable.push_back(Symbol{token, type, SymbolKind::VAL, std::pair<int, int>(level, off)});
                 off += type->size();
                 return parseParamList(paramTable, off);
             }
-            else{
+            else {
                 addErrNow();
                 return false;
             }
@@ -1094,50 +1204,50 @@ namespace parser{
             // funInfo->paramInfoPtr = new ParamInfo();
             // funInfo->entry = static_cast<int>(ans.size());
             assert(match(Token("fun")));
-            if(expect(lexer::TokenType::I)){
+            if (expect(lexer::TokenType::I)) {
                 name = peek();
-                if(symbolTableStack[level].findByToken(name) != symbolTableStack[level].end()){
+                if (symbolTableStack[level].findByToken(name) != symbolTableStack[level].end()) {
                     addErrNow("Multi define function.");
                     return false;
                 }
                 assert(name.id <= static_cast<int>(I.size()));
-                if(I[name.id - 1] == "main"){
+                if (I[name.id - 1] == "main") {
                     firstQuad = static_cast<int>(ans.size());
                 }
                 next();
             }
-            else{
+            else {
                 addErrNow();
                 return false;
             }
-            if(!match(Token("("))){
+            if (!match(Token("("))) {
                 addErrNow("Expect '('.");
                 return false;
             }
             ++level;
             symbolTableStack.emplace_back();
-            if(!parseParamList(*funInfo->paramInfoPtr, funInfo->stackSize)) return false;
-            if(!match(Token(")"))){
+            if (!parseParamList(*funInfo->paramInfoPtr, funInfo->stackSize)) return false;
+            if (!match(Token(")"))) {
                 addErrNow("Expect ')'.");
                 return false;
             }
-            if(!match(Token(":"))){
+            if (!match(Token(":"))) {
                 addErrNow("Expect ':'.");
                 return false;
             }
-            if(expect(lexer::TokenType::K)){
-                if(const Token token = peek(); token == Token("Int")) type = &INT;
-                else if(peek() == Token("Float")) type = &FLOAT;
-                else if(peek() == Token("Char")) type = &CHAR;
-                else if(peek() == Token("Bool")) type = &BOOL;
-                else if(peek() == Token("Void")) type = &VOID;
-                else{
+            if (expect(lexer::TokenType::K)) {
+                if (const Token token = peek(); token == Token("Int")) type = &INT;
+                else if (peek() == Token("Float")) type = &FLOAT;
+                else if (peek() == Token("Char")) type = &CHAR;
+                else if (peek() == Token("Bool")) type = &BOOL;
+                else if (peek() == Token("Void")) type = &VOID;
+                else {
                     addErrNow("Undefined type.");
                     return false;
                 }
                 next();
             }
-            else{
+            else {
                 addErrNow("Expect type.");
                 return false;
             }
@@ -1146,7 +1256,7 @@ namespace parser{
             symbolTableStack.pop_back();
             --level;
             assert(level + 1 == static_cast<int>(symbolTableStack.size()));
-            if(type != &VOID){
+            if (type != &VOID) {
                 ans.emplace_back("ERR", std::to_string(ans.size()));
             }
             ans[JMP] = Quad("JMP", std::to_string(ans.size()));
@@ -1155,20 +1265,20 @@ namespace parser{
 
         // 处理 <定义语句>
         bool parseDefinitionStmt(int &off) {
-            if(ptr == str.end()){
+            if (ptr == str.end()) {
                 addErrNow("Expect Token.");
                 return false;
             }
-            if(*ptr == Token("fun")){
+            if (*ptr == Token("fun")) {
                 return parseFunctionDef();
             }
-            else if(*ptr == Token("var")){
+            else if (*ptr == Token("var")) {
                 return parseVarDefStmt(off);
             }
-            else if(*ptr == Token("val")){
+            else if (*ptr == Token("val")) {
                 return parseValDefStmt(off);
             }
-            else{
+            else {
                 addErrNow("Unexpected token.");
                 return false;
             }
@@ -1176,14 +1286,14 @@ namespace parser{
 
         // 处理 <定义语句列表'>
         bool parseDefStmtListTail(int &off) {
-            if(ptr == str.end()) return true;
-            if(!parseDefinitionStmt(off)) return false;
+            if (ptr == str.end()) return true;
+            if (!parseDefinitionStmt(off)) return false;
             return parseDefStmtListTail(off);
         }
 
         // 处理 <定义语句列表>
         bool parseDefStmtList(int &off) {
-            if(!parseDefinitionStmt(off)) return false;
+            if (!parseDefinitionStmt(off)) return false;
             return parseDefStmtListTail(off);
         }
 
@@ -1193,14 +1303,14 @@ namespace parser{
             const int STACK_ALLOC = static_cast<int>(ans.size());
             ans.emplace_back("STACK_ALLOC", "0");
             level = 0;
-            if(int off = 0; !parseDefStmtList(off)){
+            if (int off = 0; !parseDefStmtList(off)) {
                 return false;
             }
-            else if(firstQuad == -1){
+            else if (firstQuad == -1) {
                 addErr("Have no main function!");
                 return false;
             }
-            else{
+            else {
                 ans[STACK_ALLOC] = Quad("STACK_ALLOC", std::to_string(off));
                 ans.emplace_back("JMP", std::to_string(firstQuad));
                 return true;
