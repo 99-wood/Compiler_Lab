@@ -1270,6 +1270,11 @@ namespace parser{
                     addErrNow("The function needs to return a value.");
                     return false;
                 }
+                mov("BX", 8, 4);
+                mov("DS", 0, 4);
+                // TODO: 释放空间
+                jmp("BX");
+                mid.emplace_back("RET", "_");
                 return true;
             }
             else{
@@ -1282,14 +1287,15 @@ namespace parser{
                 }
                 // TODO: 优化传值
                 res = toLocal(res, off);
+                mid.emplace_back("RET", res.token.toString());
                 mov("ES", 0, 4);
                 mov("BX", 4, 4);
                 mov("ES", "BX", "DS", std::get<std::pair<int, int> >(res.ptr).second, res.type->size());
+                mov("BX", 8, 4);
+                mov("DS", 0, 4);
+                // TODO: 释放空间
+                jmp("BX");
             }
-            mov("BX", 8, 4);
-            mov("DS", 0, 4);
-            // TODO: 释放空间
-            jmp("BX");
             return true;
         }
 
