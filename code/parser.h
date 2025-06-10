@@ -670,7 +670,7 @@ namespace parser{
             ans.emplace_back("MOV", "?", addrToString("ES", 8, 4)); // 跳转语句压栈
             ans.emplace_back("MOV", offsetToString(12, 4), addrToString("ES", 12, 4)); // 全局 display 压栈
             int tmpES = push("ES", off);
-            for(int i = 0, newOff = 16; i < args.size(); ++i, newOff += args[i].type->size()){
+            for(int i = 0, newOff = 16; i < args.size();newOff += args[i].type->size(), ++i){
                 if(args[i].type != paramInfo[i].type){
                     addErrNow("Function parameter mismatch");
                     isSuccess = false;
@@ -1216,13 +1216,13 @@ namespace parser{
             }
             else if(expect(lexer::TokenType::I)){
                 // SymbolTable &symbolTable = symbolTableStack.back();
-                Token token = peek();
+                const Token token = peek();
+                next();
                 const SymbolType *type = nullptr;
                 if(symbolTableStack[level].findByToken(token) != symbolTableStack[level].end()){
                     addErrNow("Multi define function.");
                     return false;
                 }
-                next();
                 if(!match(Token(":"))){
                     addErrNow("Expect ':'.");
                     return false;
@@ -1246,16 +1246,14 @@ namespace parser{
                     addErrNow("Expect type.");
                     return false;
                 }
-                if(!match(Token(","))){
-                    addErrNow("Expect ','.");
-                    return false;
-                }
                 symbolTableStack[level].push_back(Symbol{
                     token, type, SymbolKind::VAL, std::pair<int, int>{level, off}
                 });
                 paramTable.push_back(Symbol{token, type, SymbolKind::VAL, std::pair<int, int>(level, off)});
                 off += type->size();
-                return parseParamList(paramTable, off);
+                if(match(Token(","))) parseParamList(paramTable, off);
+                else if(expect(Token(")"))) return true;
+                else addErrNow();
             }
             else{
                 addErrNow();
@@ -1330,8 +1328,9 @@ namespace parser{
                 return false;
             }
             const int funPos = static_cast<int>(symbolTableStack[level - 1].size());
-            symbolTableStack[level - 1].emplace_back(name, type, SymbolKind::FUN, funInfo);
-            parseCodeBlock(funInfo->stackSize, symbolTableStack[level - 1].back());
+            const Symbol funSymbol{name, type, SymbolKind::FUN, funInfo};
+            symbolTableStack[level - 1].push_back(funSymbol);
+            parseCodeBlock(funInfo->stackSize, funSymbol);
             symbolTableStack.pop_back();
             --level;
             assert(level + 1 == static_cast<int>(symbolTableStack.size()));
