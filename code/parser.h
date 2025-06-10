@@ -927,7 +927,7 @@ namespace parser{
                 }
                 // TODO: 优化传值
                 res = toLocal(res, off);
-                mov("DS", 0, 4);
+                mov("ES", 0, 4);
                 mov("BX", 4, 4);
                 mov("ES", "BX", "DS", std::get<std::pair<int, int> >(res.ptr).second, res.type->size());
             }
