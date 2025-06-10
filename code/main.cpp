@@ -47,7 +47,7 @@ int main() {
     parser::Parser parser;
     parser.changeStr(ans, ci, cf, I);
     if(!parser.run()){
-        for(auto parseErr = parser.getErr(); const auto& s : parseErr) cout << s << endl;
+        for(const auto parseErr = parser.getErr(); const auto& s : parseErr) cout << s << endl;
     }
     else{
         auto res = parser.getRes();
@@ -55,7 +55,10 @@ int main() {
             cout << i << ": " << res[i] << endl;
         }
     }
-
-
+    for(const auto parseWarn = parser.getWarn(); const auto& s : parseWarn){
+        std::cout << "\033[33m" << s << endl << "\033[0m";
+    }
+    cout << "Enter to close screen";
+    getchar();
     return 0;
 }

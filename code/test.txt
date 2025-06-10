@@ -1,7 +1,27 @@
-var a, b : Int;
-fun f(x : Int) : Int {
-    return x;
-}
 fun main() : Int {
-    return f(1);
+    var x = 3.14e2;
+    val y = 0-42;
+    val z = x + y * Int(5.1e-15);
+
+    if (x >= y && y != 0) {
+        return x / y;
+    } else {
+        val msg = 'A';
+        val escape = '\\';
+        val ch = 'c';
+        val b = 1;
+    }
+
+    while (x < 100) {
+        x = x - 1;
+    }
+
+    x = x + y;
+    x = x - y;
+    x = x * y;
+    x = x / y;
+    if (x == y || x != y) {
+        x = 0;
+    }
+
 }
