@@ -26,7 +26,7 @@ fun CountPrimes(limit: Int): Int {
 }
 
 fun main(): Int {
-    var n = 30;
+    var n = 100;
     var primeCount = CountPrimes(n);
     return primeCount;
 }
