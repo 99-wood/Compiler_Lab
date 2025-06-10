@@ -58,7 +58,7 @@ namespace lexer{
         , ":"   /*26*/
     };
     enum class TokenType {
-        K, P, I, CI, CF, CC, CB
+        K, P, I, CI, CF, CC, CB, T
     };
 
     inline std::ostream& operator<< (std::ostream& os, const TokenType& tt) {
@@ -69,6 +69,7 @@ namespace lexer{
         if(tt == TokenType::CF) return os << "CF";
         if(tt == TokenType::CC) return os << "CC";
         if(tt == TokenType::CB) return os << "CB";
+        if(tt == TokenType::T) return os << "T";
         throw std::runtime_error("Invalid TokenType value");
     }
     struct Token {
@@ -92,6 +93,11 @@ namespace lexer{
         }
         friend std::ostream& operator<< (std::ostream& os, const Token& token) {
             return os << "(" << token.type << ", " << token.id << ")";
+        }
+        [[nodiscard]] string toString() const {
+            std::stringstream ss;
+            ss << "(" << type << ", " << id << ")";
+            return ss.str();
         }
     };
 

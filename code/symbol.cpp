@@ -35,7 +35,7 @@ namespace symbol{
         }
     }
 
-    TempSymbol::TempSymbol(const Symbol &symbol) : type(symbol.type), kind(symbol.kind), ptr(symbol.ptr) {
+    TempSymbol::TempSymbol(const Symbol &symbol) : token(symbol.token), type(symbol.type), kind(symbol.kind), ptr(symbol.ptr) {
         if(symbol.kind == SymbolKind::FUN || symbol.kind == SymbolKind::PROCESS || symbol.kind == SymbolKind::TYPE)
             throw std::runtime_error("Cannot trans Symbol to TempSymbol.");
         // else if(kind == SymbolKind::VAL || kind == SymbolKind::VAR){
@@ -51,8 +51,8 @@ namespace symbol{
         // }
     }
 
-    TempSymbol::TempSymbol(const SymbolType *type, const SymbolKind &kind,
-                           SymbolInfoPtr ptr) : type(type), kind(kind), ptr(std::move(ptr)) {
+    TempSymbol::TempSymbol(const Token &token, const SymbolType *type, const SymbolKind &kind,
+                           SymbolInfoPtr ptr) : token(token), type(type), kind(kind), ptr(std::move(ptr)) {
     }
 
     int TempSymbol::getVal() const {

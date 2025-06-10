@@ -50,9 +50,13 @@ int main() {
         for(const auto parseErr = parser.getErr(); const auto& s : parseErr) cout << s << endl;
     }
     else{
-        auto res = parser.getRes();
+        const auto res = parser.getRes();
         for(size_t i = 0; i < res.size(); ++i){
             cout << i << ": " << res[i] << endl;
+        }
+        const auto mid = parser.getMid();
+        for(size_t i = 0; i < mid.size(); ++i){
+            cout << i << ": " << mid[i] << endl;
         }
     }
     for(const auto parseWarn = parser.getWarn(); const auto& s : parseWarn){

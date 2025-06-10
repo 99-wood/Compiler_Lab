@@ -42,6 +42,7 @@ namespace parser{
         vector<float> cf;
         vector<string> I;
         vector<Quad> ans;
+        vector<Quad> mid;
         int mainPos{};
         vector<string> err;
         vector<string> warn;
@@ -198,6 +199,16 @@ namespace parser{
             --ptr;
         }
 
+        int cntTempSymbol, cntSymbol;
+        TempSymbol newTempSymbol(const SymbolType *type, int &off){
+            TempSymbol res{Token{lexer::TokenType::T, cntTempSymbol++}, type, SymbolKind::VAR, std::pair<int, int>(level, off)};
+            off += type->size();
+            return res;
+        }
+        static TempSymbol newTempSymbol(const Symbol &symbol){
+            return TempSymbol{symbol};
+        }
+
         [[nodiscard]] static string offsetToString(const int off, const int size) {
             return "[DS + " + std::to_string(off) + ": " + std::to_string(size) + "]";
         }
@@ -225,12 +236,12 @@ namespace parser{
 
         [[nodiscard]] int push(const string &reg, int &off) {
             assert(reg == "BX" || reg == "DS" || reg == "ES");
+            TempSymbol res = newTempSymbol(&INT, off);
             ans.emplace_back(
                 "MOV",
                 reg,
-                offsetToString(off, 4));
-            off += 4;
-            return off - 4;
+                offsetToString(std::get<std::pair<int, int>>(res.ptr).second, 4));
+            return std::get<std::pair<int, int>>(res.ptr).second;
         }
 
         void pop(const string &reg, const int off) {
@@ -265,33 +276,33 @@ namespace parser{
                 offsetToString(dest, size));
         }
 
-        void mov(const std::pair<int, int> &dest, const string &reg, const int size, int &off) {
-            assert(reg == "BX" || reg == "DS");
-            auto [dlv, doff] = dest;
-            if(dlv == level) return mov(doff, reg, size);
-            else{
-                if(reg == "DS"){
-                    const int tmp = off;
-                    off += 4;
-                    push("BX", off);
-                    mov("BX", "DS", 4);
-                    mov("DS", 12 + 4 * dlv, 4);
-                    mov(doff, "BX", size);
-                    mov("DS", "BX", 4);
-                    pop("BX", tmp);
-                }
-                else{
-                    const int tmp = off;
-                    off += 4;
-                    push("ES", off);
-                    mov("ES", "DS", 4);
-                    mov("DS", 12 + 4 * dlv, 4);
-                    mov(doff, reg, size);
-                    mov("DS", "ES", 4);
-                    pop("ES", tmp);
-                }
-            }
-        }
+//        void mov(const std::pair<int, int> &dest, const string &reg, const int size, int &off) {
+//            assert(reg == "BX" || reg == "DS");
+//            auto [dlv, doff] = dest;
+//            if(dlv == level) return mov(doff, reg, size);
+//            else{
+//                if(reg == "DS"){
+//                    const int tmp = off;
+//                    off += 4;
+//                    push("BX", off);
+//                    mov("BX", "DS", 4);
+//                    mov("DS", 12 + 4 * dlv, 4);
+//                    mov(doff, "BX", size);
+//                    mov("DS", "BX", 4);
+//                    pop("BX", tmp);
+//                }
+//                else{
+//                    const int tmp = off;
+//                    off += 4;
+//                    push("ES", off);
+//                    mov("ES", "DS", 4);
+//                    mov("DS", 12 + 4 * dlv, 4);
+//                    mov(doff, reg, size);
+//                    mov("DS", "ES", 4);
+//                    pop("ES", tmp);
+//                }
+//            }
+//        }
 
         // BX <- [地址]
         void mov(const string &reg, const std::pair<int, int> &src, const int size, int &off) {
@@ -323,18 +334,18 @@ namespace parser{
         }
 
         // [偏移量] <- 临时变量
-        void mov(const int dest, const TempSymbol &src, int &off) {
-            if(src.type == &VOID) throw std::runtime_error("Cannot move Void.");
-            if(src.kind == SymbolKind::CONST){
-                ans.emplace_back("MOV",
-                                 std::to_string(src.getVal()),
-                                 offsetToString(dest, src.type->size()));
-            }
-            else{
-                assert(src.kind == SymbolKind::VAL || src.kind == SymbolKind::VAR);
-                mov(dest, std::pair<int, int>(std::get<std::pair<int, int> >(src.ptr)), src.type->size(), off);
-            }
-        }
+//        void mov(const int dest, const TempSymbol &src, int &off) {
+//            if(src.type == &VOID) throw std::runtime_error("Cannot move Void.");
+//            if(src.kind == SymbolKind::CONST){
+//                ans.emplace_back("MOV",
+//                                 std::to_string(src.getVal()),
+//                                 offsetToString(dest, src.type->size()));
+//            }
+//            else{
+//                assert(src.kind == SymbolKind::VAL || src.kind == SymbolKind::VAR);
+//                mov(dest, std::pair<int, int>(std::get<std::pair<int, int> >(src.ptr)), src.type->size(), off);
+//            }
+//        }
 
         // [ES:BX] <- [DS:OFF]
         void mov(const string &ES, const string &BX, const string &DS, const int off, const int size) {
@@ -357,7 +368,7 @@ namespace parser{
         void mov(const TempSymbol &dest, TempSymbol src, int &off) {
             assert(dest.type != &VOID);
             assert(src.type != &VOID);
-            assert(dest.kind == SymbolKind::VAR);
+            assert(dest.kind == SymbolKind::VAR || dest.kind == SymbolKind::VAL);
             if(src.type != dest.type){
                 addImplicitTypeConversionWarn();
                 src = typeConversion(src, dest.type, off);
@@ -370,6 +381,9 @@ namespace parser{
                 ans.emplace_back("MOV",
                                  std::to_string(src.getVal()),
                                  addrToString("ES", of, dest.type->size()));
+                mid.emplace_back("MOV",
+                                 std::to_string(src.getVal()),
+                                 dest.token.toString());
                 // pop("ES", tmp);
                 return;
             }
@@ -382,6 +396,9 @@ namespace parser{
                 ans.emplace_back("MOV",
                                  offsetToString(std::get<std::pair<int, int> >(src.ptr).second, src.type->size()),
                                  addrToString("ES", of, src.type->size()));
+                mid.emplace_back("MOV",
+                                 src.token.toString(),
+                                 dest.token.toString());
                 // pop("ES", tmp);
                 return;
             }
@@ -435,10 +452,10 @@ namespace parser{
                 return res;
             }
             else{
-                TempSymbol res;
-                res.type = type;
-                res.kind = SymbolKind::VAR;
-                res.ptr = std::pair<int, int>(level, off);
+                TempSymbol res = newTempSymbol(type, off);
+//                res.type = type;
+//                res.kind = SymbolKind::VAR;
+//                res.ptr = std::pair<int, int>(level, off);
                 auto [lv, of] = std::get<std::pair<int, int> >(res.ptr);
                 // TODO: 优化传值
                 // const int tmpES = push("ES", off);
@@ -448,11 +465,14 @@ namespace parser{
                 s.push_back(symbol.type->toString()[0]);
                 s.push_back('2');
                 s.push_back(type->toString()[0]);
-                int tmp = off;
-                off += type->size();
+//                int tmp = off;
+//                off += type->size();
                 ans.emplace_back(s,
                                  addrToString("ES", of, res.type->size()),
-                                 offsetToString(tmp, type->size()));
+                                 offsetToString(std::get<std::pair<int, int>>(res.ptr).second, type->size()));
+                mid.emplace_back(s,
+                                 symbol.token.toString(),
+                                 res.token.toString());
                 // pop("ES", tmpES);
                 return res;
             }
@@ -466,25 +486,33 @@ namespace parser{
                 throw std::runtime_error("Cannot trans Void to local.");
             }
             if(symbol.kind == SymbolKind::CONST){
-                const int tmp = off;
-                off += symbol.type->size();
+                TempSymbol res = newTempSymbol(symbol.type, off);
+//                const int tmp = off;
+//                off += symbol.type->size();
                 ans.emplace_back("MOV",
                                  std::to_string(symbol.getVal()),
-                                 offsetToString(tmp, symbol.type->size()));
-                return {symbol.type, SymbolKind::CONST, std::pair<int, int>(level, tmp)};
+                                 offsetToString(std::get<std::pair<int, int>>(res.ptr).second, symbol.type->size()));
+                mid.emplace_back("MOV",
+                                 std::to_string(symbol.getVal()),
+                                 res.token.toString());
+                return res;
             }
             else{
                 if(std::get<std::pair<int, int> >(symbol.ptr).first == level) return symbol; // 如果就在当前段直接返回
-                const int tmp = off;
-                off += symbol.type->size();
+                TempSymbol res = newTempSymbol(symbol.type, off);
+//                const int tmp = off;
+//                off += symbol.type->size();
                 auto [lv, of] = std::get<std::pair<int, int> >(symbol.ptr);
                 // const int tmpES = push("ES", off);
                 mov("ES", 12 + lv * 4, 4);
                 ans.emplace_back("MOV",
                                  addrToString("ES", of, symbol.type->size()),
-                                 offsetToString(tmp, symbol.type->size()));
+                                 offsetToString(std::get<std::pair<int, int>>(res.ptr).second, symbol.type->size()));
+                mid.emplace_back("MOV",
+                                 symbol.token.toString(),
+                                 res.token.toString());
                 // pop("ES", tmpES);
-                return {symbol.type, SymbolKind::CONST, std::pair<int, int>(level, tmp)};
+                return res;
             }
         }
 
@@ -497,18 +525,23 @@ namespace parser{
             x = typeConversion(x, &BOOL, off);
             y = typeConversion(y, &BOOL, off);
             if(x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST){
-                return {&BOOL, SymbolKind::CONST, std::get<bool>(x.ptr) || std::get<bool>(y.ptr)};
+                return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<bool>(x.ptr) || std::get<bool>(y.ptr)};
             }
             else{
                 x = toLocal(x, off);
                 y = toLocal(y, off);
-                const int tmp = off;
-                off += BOOL.size();
+                TempSymbol res = newTempSymbol(&BOOL, off);
+//                const int tmp = off;
+//                off += BOOL.size();
                 ans.emplace_back("OR",
                                  offsetToString(std::get<std::pair<int, int> >(x.ptr).second, BOOL.size()),
                                  offsetToString(std::get<std::pair<int, int> >(y.ptr).second, BOOL.size()),
-                                 offsetToString(tmp, BOOL.size()));
-                return {&BOOL, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
+                                 offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                mid.emplace_back("OR",
+                                 x.token.toString(),
+                                 y.token.toString(),
+                                 res.token.toString());
+                return res;
             }
         }
 
@@ -521,18 +554,23 @@ namespace parser{
             x = typeConversion(x, &BOOL, off);
             y = typeConversion(y, &BOOL, off);
             if(x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST){
-                return {&BOOL, SymbolKind::CONST, std::get<bool>(x.ptr) && std::get<bool>(y.ptr)};
+                return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<bool>(x.ptr) && std::get<bool>(y.ptr)};
             }
             else{
                 x = toLocal(x, off);
                 y = toLocal(y, off);
-                const int tmp = off;
-                off += BOOL.size();
+                TempSymbol res = newTempSymbol(&BOOL, off);
+//                const int tmp = off;
+//                off += BOOL.size();
                 ans.emplace_back("AND",
                                  offsetToString(std::get<std::pair<int, int> >(x.ptr).second, BOOL.size()),
                                  offsetToString(std::get<std::pair<int, int> >(y.ptr).second, BOOL.size()),
-                                 offsetToString(tmp, BOOL.size()));
-                return {&BOOL, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
+                                 offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                mid.emplace_back("AND",
+                                 x.token.toString(),
+                                 y.token.toString(),
+                                 res.token.toString());
+                return res;
             }
         }
 
@@ -557,57 +595,82 @@ namespace parser{
                 x = typeConversion(x, &FLOAT, off);
                 y = typeConversion(y, &FLOAT, off);
                 if(x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST){
-                    if(token == Token(">")) return {&BOOL, SymbolKind::CONST, std::get<float>(x.ptr) > std::get<float>(y.ptr)};
-                    else if(token == Token(">=")) return {&BOOL, SymbolKind::CONST, std::get<float>(x.ptr) >= std::get<float>(y.ptr)};
-                    else if(token == Token("<")) return {&BOOL, SymbolKind::CONST, std::get<float>(x.ptr) < std::get<float>(y.ptr)};
-                    else if(token == Token("<=")) return {&BOOL, SymbolKind::CONST, std::get<float>(x.ptr) <= std::get<float>(y.ptr)};
-                    else if(token == Token("==")) return {&BOOL, SymbolKind::CONST, std::get<float>(x.ptr) == std::get<float>(y.ptr)};
-                    else if(token == Token("!=")) return {&BOOL, SymbolKind::CONST, std::get<float>(x.ptr) != std::get<float>(y.ptr)};
+                    if(token == Token(">")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<float>(x.ptr) > std::get<float>(y.ptr)};
+                    else if(token == Token(">=")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<float>(x.ptr) >= std::get<float>(y.ptr)};
+                    else if(token == Token("<")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<float>(x.ptr) < std::get<float>(y.ptr)};
+                    else if(token == Token("<=")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<float>(x.ptr) <= std::get<float>(y.ptr)};
+                    else if(token == Token("==")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<float>(x.ptr) == std::get<float>(y.ptr)};
+                    else if(token == Token("!=")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<float>(x.ptr) != std::get<float>(y.ptr)};
                     else assert(0);
                 }
                 else{
                     x = toLocal(x, off);
                     y = toLocal(y, off);
-                    const int tmp = off;
-                    off += BOOL.size();
+                    TempSymbol res = newTempSymbol(&BOOL, off);
+//                    const int tmp = off;
+//                    off += BOOL.size();
                     if(token == Token(">")){
                         ans.emplace_back("GF",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, FLOAT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("GF",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else if(token == Token(">=")){
                         ans.emplace_back("GEF",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, FLOAT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("GEF",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else if(token == Token("<")){
                         ans.emplace_back("LF",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, FLOAT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("LF",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else if(token == Token("<=")){
                         ans.emplace_back("LEF",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, FLOAT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("LEF",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else if(token == Token("==")){
                         ans.emplace_back("EF",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, FLOAT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("EF",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else if(token == Token("!=")){
                         ans.emplace_back("NEF",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, FLOAT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("NEF",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else assert(0);
-                    return {&BOOL, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
+                    return res;
                 }
             }
             else{
@@ -615,57 +678,82 @@ namespace parser{
                 x = typeConversion(x, &INT, off);
                 y = typeConversion(y, &INT, off);
                 if(x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST){
-                    if(token == Token(">")) return {&BOOL, SymbolKind::CONST, std::get<int>(x.ptr) > std::get<int>(y.ptr)};
-                    else if(token == Token(">=")) return {&BOOL, SymbolKind::CONST, std::get<int>(x.ptr) >= std::get<int>(y.ptr)};
-                    else if(token == Token("<")) return {&BOOL, SymbolKind::CONST, std::get<int>(x.ptr) < std::get<int>(y.ptr)};
-                    else if(token == Token("<=")) return {&BOOL, SymbolKind::CONST, std::get<int>(x.ptr) <= std::get<int>(y.ptr)};
-                    else if(token == Token("==")) return {&BOOL, SymbolKind::CONST, std::get<int>(x.ptr) == std::get<int>(y.ptr)};
-                    else if(token == Token("!=")) return {&BOOL, SymbolKind::CONST, std::get<int>(x.ptr) != std::get<int>(y.ptr)};
+                    if(token == Token(">")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<int>(x.ptr) > std::get<int>(y.ptr)};
+                    else if(token == Token(">=")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<int>(x.ptr) >= std::get<int>(y.ptr)};
+                    else if(token == Token("<")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<int>(x.ptr) < std::get<int>(y.ptr)};
+                    else if(token == Token("<=")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<int>(x.ptr) <= std::get<int>(y.ptr)};
+                    else if(token == Token("==")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<int>(x.ptr) == std::get<int>(y.ptr)};
+                    else if(token == Token("!=")) return {Token{lexer::TokenType::T, -1}, &BOOL, SymbolKind::CONST, std::get<int>(x.ptr) != std::get<int>(y.ptr)};
                     else assert(0);
                 }
                 else{
                     x = toLocal(x, off);
                     y = toLocal(y, off);
-                    const int tmp = off;
-                    off += BOOL.size();
+                    TempSymbol res = newTempSymbol(&BOOL, off);
+//                    const int tmp = off;
+//                    off += BOOL.size();
                     if(token == Token(">")){
                         ans.emplace_back("G",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, INT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("G",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else if(token == Token(">=")){
                         ans.emplace_back("GE",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, INT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("GE",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else if(token == Token("<")){
                         ans.emplace_back("L",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, INT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("L",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else if(token == Token("<=")){
                         ans.emplace_back("LE",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, INT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("LE",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else if(token == Token("==")){
                         ans.emplace_back("E",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, INT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("E",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else if(token == Token("!=")){
                         ans.emplace_back("NE",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, INT.size()),
-                                         offsetToString(tmp, BOOL.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, BOOL.size()));
+                        mid.emplace_back("NE",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else assert(0);
-                    return {&BOOL, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
+                    return res;
                 }
             }
         }
@@ -681,27 +769,36 @@ namespace parser{
                 x = typeConversion(x, &FLOAT, off);
                 y = typeConversion(y, &FLOAT, off);
                 if(x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST){
-                    if(isAdd) return {&FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) + std::get<float>(y.ptr)};
-                    else return {&FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) - std::get<float>(y.ptr)};
+                    if(isAdd) return {Token{lexer::TokenType::T, -1}, &FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) + std::get<float>(y.ptr)};
+                    else return {Token{lexer::TokenType::T, -1}, &FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) - std::get<float>(y.ptr)};
                 }
                 else{
                     x = toLocal(x, off);
                     y = toLocal(y, off);
-                    const int tmp = off;
-                    off += FLOAT.size();
+                    TempSymbol res = newTempSymbol(&FLOAT, off);
+//                    const int tmp = off;
+//                    off += FLOAT.size();
                     if(isAdd){
                         ans.emplace_back("ADDF",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, FLOAT.size()),
-                                         offsetToString(tmp, FLOAT.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, FLOAT.size()));
+                        mid.emplace_back("ADDF",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else{
                         ans.emplace_back("DELF",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, FLOAT.size()),
-                                         offsetToString(tmp, FLOAT.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, FLOAT.size()));
+                        mid.emplace_back("DELF",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
-                    return {&FLOAT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
+                    return res;
                 }
             }
             else{
@@ -709,27 +806,36 @@ namespace parser{
                 x = typeConversion(x, &INT, off);
                 y = typeConversion(y, &INT, off);
                 if(x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST){
-                    if(isAdd) return {&INT, SymbolKind::CONST, std::get<int>(x.ptr) + std::get<int>(y.ptr)};
-                    else return {&INT, SymbolKind::CONST, std::get<int>(x.ptr) - std::get<int>(y.ptr)};
+                    if(isAdd) return {Token{lexer::TokenType::T, -1}, &INT, SymbolKind::CONST, std::get<int>(x.ptr) + std::get<int>(y.ptr)};
+                    else return {Token{lexer::TokenType::T, -1}, &INT, SymbolKind::CONST, std::get<int>(x.ptr) - std::get<int>(y.ptr)};
                 }
                 else{
                     x = toLocal(x, off);
                     y = toLocal(y, off);
-                    const int tmp = off;
-                    off += INT.size();
+                    TempSymbol res = newTempSymbol(&INT, off);
+//                    const int tmp = off;
+//                    off += INT.size();
                     if(isAdd){
                         ans.emplace_back("ADD",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, INT.size()),
-                                         offsetToString(tmp, INT.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, INT.size()));
+                        mid.emplace_back("ADD",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else{
                         ans.emplace_back("DEL",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, INT.size()),
-                                         offsetToString(tmp, INT.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, INT.size()));
+                        mid.emplace_back("DEL",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
-                    return {&INT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
+                    return res;
                 }
             }
         }
@@ -746,27 +852,36 @@ namespace parser{
                 x = typeConversion(x, &FLOAT, off);
                 y = typeConversion(y, &FLOAT, off);
                 if(x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST){
-                    if(isMul) return {&FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) * std::get<float>(y.ptr)};
-                    else return {&FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) / std::get<float>(y.ptr)};
+                    if(isMul) return {Token{lexer::TokenType::T, -1}, &FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) * std::get<float>(y.ptr)};
+                    else return {Token{lexer::TokenType::T, -1}, &FLOAT, SymbolKind::CONST, std::get<float>(x.ptr) / std::get<float>(y.ptr)};
                 }
                 else{
                     x = toLocal(x, off);
                     y = toLocal(y, off);
-                    const int tmp = off;
-                    off += FLOAT.size();
+                    TempSymbol res = newTempSymbol(&FLOAT, off);
+//                    const int tmp = off;
+//                    off += FLOAT.size();
                     if(isMul){
                         ans.emplace_back("MULF",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, FLOAT.size()),
-                                         offsetToString(tmp, FLOAT.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, FLOAT.size()));
+                        mid.emplace_back("MULF",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else{
                         ans.emplace_back("DIVF",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, FLOAT.size()),
-                                         offsetToString(tmp, FLOAT.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, FLOAT.size()));
+                        mid.emplace_back("DIVF",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
-                    return {&FLOAT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
+                    return res;
                 }
             }
             else{
@@ -774,33 +889,42 @@ namespace parser{
                 x = typeConversion(x, &INT, off);
                 y = typeConversion(y, &INT, off);
                 if(x.kind == SymbolKind::CONST && y.kind == SymbolKind::CONST){
-                    if(isMul) return {&INT, SymbolKind::CONST, std::get<int>(x.ptr) * std::get<int>(y.ptr)};
+                    if(isMul) return {Token{lexer::TokenType::T, -1}, &INT, SymbolKind::CONST, std::get<int>(x.ptr) * std::get<int>(y.ptr)};
                     else{
                         if(std::get<int>(y.ptr) == 0){
                             isSuccess = false;
                             return {};
                         }
-                        return {&INT, SymbolKind::CONST, std::get<int>(x.ptr) / std::get<int>(y.ptr)};
+                        return {Token{lexer::TokenType::T, -1}, &INT, SymbolKind::CONST, std::get<int>(x.ptr) / std::get<int>(y.ptr)};
                     }
                 }
                 else{
                     x = toLocal(x, off);
                     y = toLocal(y, off);
-                    const int tmp = off;
-                    off += INT.size();
+                    TempSymbol res = newTempSymbol(&INT, off);
+//                    const int tmp = off;
+//                    off += INT.size();
                     if(isMul){
                         ans.emplace_back("MUL",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, INT.size()),
-                                         offsetToString(tmp, INT.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, INT.size()));
+                        mid.emplace_back("MUL",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
                     else{
                         ans.emplace_back("DIV",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, INT.size()),
-                                         offsetToString(tmp, INT.size()));
+                                         offsetToString(std::get<std::pair<int, int>>(res.ptr).second, INT.size()));
+                        mid.emplace_back("DIV",
+                                         x.token.toString(),
+                                         y.token.toString(),
+                                         res.token.toString());
                     }
-                    return {&INT, SymbolKind::VAR, std::pair<int, int>(level, tmp)};
+                    return res;
                 }
             }
         }
@@ -820,10 +944,14 @@ namespace parser{
             const int STACK_ALLOC = static_cast<int>(ans.size());
             ans.emplace_back("STACK_ALLOC", "?");
             allocQuat.emplace_back(STACK_ALLOC, funSymbol.token); // 存储分配空间语句以备反填
-            const int retOff = funSymbol.type == &VOID ? 0 : off;
-            off += funSymbol.type->size();
+            const TempSymbol res = funSymbol.type == &VOID ? TempSymbol{Token{lexer::TokenType::T, -1}, &VOID, SymbolKind::CONST, 0} : newTempSymbol(funSymbol.type, off);
+            mid.emplace_back("CALL",
+                             std::to_string(std::get<FunInfo*>(funSymbol.ptr)->entryM),
+                             res.token.toString());
+//            const int retOff = funSymbol.type == &VOID ? 0 : off;
+//            off += funSymbol.type->size();
             ans.emplace_back("MOV", "DS", addrToString("ES", 0, 4)); // 返回地址基址压栈
-            ans.emplace_back("MOV", std::to_string(retOff), addrToString("ES", 4, 4)); // 返回地址偏移量压栈
+            ans.emplace_back("MOV", std::to_string(std::get<std::pair<int, int>>(res.ptr).second), addrToString("ES", 4, 4)); // 返回地址偏移量压栈
             const int JMP_ARG = static_cast<int>(ans.size());
             ans.emplace_back("MOV", "?", addrToString("ES", 8, 4)); // 跳转语句压栈
             ans.emplace_back("MOV", offsetToString(12, 4), addrToString("ES", 12, 4)); // 全局 display 压栈
@@ -848,9 +976,7 @@ namespace parser{
             const int STACK_FREE = static_cast<int>(ans.size());
             ans.emplace_back("STACK_FREE", "?");
             freeQuat.emplace_back(STACK_FREE, funSymbol.token); // 存储释放空间语句以备反填
-            return (funSymbol.type == &VOID)
-                       ? TempSymbol{&VOID, SymbolKind::CONST, 0}
-                       : TempSymbol{funSymbol.type, SymbolKind::VAR, std::pair<int, int>(level, retOff)};
+            return res;
         }
 
 
@@ -882,10 +1008,11 @@ namespace parser{
             }
             if(!match(Token("="))) return false;
             if(!parseExpression(off, res)) return false;
-            symbolTableStack[level].push_back(Symbol{name, res.type, kind, std::pair<int, int>(level, off)});
-            const int tmp = off;
+            const Symbol var{name, res.type, kind, std::pair<int, int>(level, off)};
+            symbolTableStack[level].push_back(var);
+//            const int tmp = off;
             off += static_cast<int>(res.type->size());
-            mov(tmp, res, off);
+            mov(TempSymbol(var), res, off);
             return parseInitListSuffixTail(off, kind);
         }
 
@@ -895,10 +1022,11 @@ namespace parser{
             assert(match(Token("=")));
             TempSymbol res{};
             if(!parseExpression(off, res)) return false;
-            symbolTableStack[level].push_back(Symbol{lastToken, res.type, kind, std::pair<int, int>(level, off)});
-            const int tmp = off;
+            const Symbol var = {lastToken, res.type, kind, std::pair<int, int>(level, off)};
+            symbolTableStack[level].push_back(var);
+//            const int tmp = off;
             off += static_cast<int>(res.type->size());
-            mov(tmp, res, off);
+            mov(TempSymbol(var), res, off);
             return parseInitListSuffixTail(off, kind);
         }
 
@@ -1037,13 +1165,16 @@ namespace parser{
                 res = typeConversion(res, &BOOL, off);
             }
             const int JZ = static_cast<int>(ans.size());
+            const int JZM = static_cast<int>(mid.size());
             if(res.kind == SymbolKind::CONST){
                 addWarnNow("If statement contains constants.");
                 ans.emplace_back("JZ", std::to_string(res.getVal()), "?");
+                mid.emplace_back("JZ", std::to_string(res.getVal()), "?");
             }
             else{
                 res = toLocal(res, off);
                 ans.emplace_back("JZ", offsetToString(std::get<std::pair<int, int> >(res.ptr).second, 1), "?");
+                mid.emplace_back("JZ", res.token.toString(), "?");
             }
             int ifBlockOffset = (level + 1) * 4 + 12;
             int IF_STACK_ALLOC; // 反填语句记录
@@ -1059,8 +1190,11 @@ namespace parser{
             ans[IF_STACK_ALLOC] = Quad{"STACK_ALLOC", std::to_string(ifBlockOffset)};
             if(match(Token("else"))){
                 const int JMP = static_cast<int>(ans.size());
+                const int JMPM = static_cast<int>(mid.size());
                 ans.emplace_back("JMP", "?");
+                mid.emplace_back("JMP", "?");
                 ans[JZ].arg2 = std::to_string(ans.size());
+                mid[JZM].arg2 = std::to_string(mid.size());
                 int elseBlockOffset = (level + 1) * 4 + 12;
                 int ELSE_STACK_ALLOC;
                 genCodeGlockCall(ELSE_STACK_ALLOC);
@@ -1074,9 +1208,11 @@ namespace parser{
                 assert(ans[ELSE_STACK_ALLOC].op == "STACK_ALLOC");
                 ans[ELSE_STACK_ALLOC] = Quad{"STACK_ALLOC", std::to_string(elseBlockOffset)};
                 ans[JMP].arg1 = std::to_string(ans.size());
+                mid[JMPM].arg1 = std::to_string(mid.size());
             }
             else{
                 ans[JZ].arg2 = std::to_string(ans.size());
+                mid[JZM].arg2 = std::to_string(mid.size());
             }
             return true;
         }
@@ -1097,13 +1233,16 @@ namespace parser{
                 res = typeConversion(res, &BOOL, off);
             }
             const int JZ = static_cast<int>(ans.size());
+            const int JZM = static_cast<int>(mid.size());
             if(res.kind == SymbolKind::CONST){
                 addWarnNow("If statement contains constants.");
                 ans.emplace_back("JZ", std::to_string(res.getVal()), "?");
+                mid.emplace_back("JZ", std::to_string(res.getVal()), "?");
             }
             else{
                 res = toLocal(res, off);
                 ans.emplace_back("JZ", offsetToString(std::get<std::pair<int, int> >(res.ptr).second, 1), "?");
+                mid.emplace_back("JZ", res.token.toString(), "?");
             }
             int BlockOffset = (level + 1) * 4 + 12;
             int STACK_ALLOC; // 反填语句记录
@@ -1119,6 +1258,7 @@ namespace parser{
             ans[STACK_ALLOC] = Quad{"STACK_ALLOC", std::to_string(BlockOffset)};
             ans.emplace_back("JMP", std::to_string(JZ));
             ans[JZ].arg2 = std::to_string(ans.size());
+            mid[JZM].arg2 = std::to_string(mid.size());
             return true;
         }
 
@@ -1490,7 +1630,10 @@ namespace parser{
                 off += type->size();
                 if(match(Token(","))) parseParamList(paramTable, off);
                 else if(expect(Token(")"))) return true;
-                else addErrNow();
+                else {
+                    addErrNow();
+                    return false;
+                }
             }
             else{
                 addErrNow();
@@ -1501,11 +1644,13 @@ namespace parser{
         // 处理 <函数定义>
         bool parseFunctionDef() {
             const int JMP = static_cast<int>(ans.size());
-            ans.emplace_back("JMP", "0");
+            const int JMPM = static_cast<int>(mid.size());
+            ans.emplace_back("JMP", "?");
+            mid.emplace_back("JMP", "?");
             assert(!symbolTableStack.empty());
             Token name{}; // 函数名
             const SymbolType *type; // 函数类型
-            auto *funInfo = new FunInfo(level, 16, 16, new ParamInfo, static_cast<int>(ans.size())); // 函数信息表
+            auto *funInfo = new FunInfo(level, 16, 16, new ParamInfo, static_cast<int>(ans.size()), static_cast<int>(mid.size())); // 函数信息表
             // funInfo->level = level;
             // funInfo->off = 16; // 返回地址基址，返回值地址偏移量，跳转指令地址，全局变量偏移量
             // funInfo->stackSize = 16;
@@ -1573,13 +1718,16 @@ namespace parser{
             assert(level + 1 == static_cast<int>(symbolTableStack.size()));
             if(type != &VOID){
                 ans.emplace_back("ERR", std::to_string(ans.size()));
+                mid.emplace_back("ERR", std::to_string(mid.size()));
             }
             else{
                 mov("BX", 8, 4);
                 mov("DS", 0, 4);
                 jmp("BX");
+                mid.emplace_back("RET", "_");
             }
             ans[JMP] = Quad("JMP", std::to_string(ans.size()));
+            mid[JMPM] = Quad("JMP", std::to_string(mid.size()));
             if(isMain) mainPos = funPos;
             return true;
         }
@@ -1677,6 +1825,8 @@ namespace parser{
         }
 
         bool run() {
+            cntSymbol = 0;
+            cntTempSymbol = 0;
             ptr = str.begin();
             ans.clear();
             mainPos = -1;
@@ -1698,6 +1848,10 @@ namespace parser{
 
         [[nodiscard]] vector<Quad> getRes() const {
             return ans;
+        }
+
+        [[nodiscard]] vector<Quad> getMid() const {
+            return mid;
         }
     };
 }

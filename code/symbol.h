@@ -79,13 +79,13 @@ namespace symbol{
     using ParamInfo = vector<Symbol>;
 
     struct FunInfo {
-        int level, off, stackSize, entry;
+        int level, off, stackSize, entry, entryM;
         ParamInfo *paramInfoPtr;
 
         FunInfo() = default;
 
         FunInfo(const int level, const int off, const int stackSize, ParamInfo *paramInfoPtr,
-                const int entry) : level(level), off(off), stackSize(stackSize), entry(entry),
+                const int entry, const int entryM) : level(level), off(off), stackSize(stackSize), entry(entry), entryM(entryM),
                                    paramInfoPtr(paramInfoPtr) {
         }
     };
@@ -100,6 +100,7 @@ namespace symbol{
     >;
 
     struct TempSymbol {
+        Token token{};
         const SymbolType *type{};
         SymbolKind kind{};
 
@@ -109,7 +110,7 @@ namespace symbol{
 
         explicit TempSymbol(const Symbol &symbol);
 
-        TempSymbol(const SymbolType *type, const SymbolKind &kind, SymbolInfoPtr ptr);
+        TempSymbol(const Token &token, const SymbolType *type, const SymbolKind &kind, SymbolInfoPtr ptr);
 
         [[nodiscard]] int getVal() const;
     };
