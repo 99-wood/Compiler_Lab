@@ -1073,7 +1073,7 @@ namespace parser{
                 ans.emplace_back("STACK_FREE", std::to_string(elseBlockOffset));
                 assert(ans[ELSE_STACK_ALLOC].op == "STACK_ALLOC");
                 ans[ELSE_STACK_ALLOC] = Quad{"STACK_ALLOC", std::to_string(elseBlockOffset)};
-                ans[JMP].arg2 = std::to_string(ans.size());
+                ans[JMP].arg1 = std::to_string(ans.size());
             }
             else{
                 ans[JZ].arg2 = std::to_string(ans.size());
