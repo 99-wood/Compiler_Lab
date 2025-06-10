@@ -72,6 +72,25 @@ namespace lexer{
         if(tt == TokenType::T) return os << "T";
         throw std::runtime_error("Invalid TokenType value");
     }
+
+    inline std::istream& operator>> (std::istream& is, TokenType& tt) {
+        char c;
+        is >> c;
+        if(c == 'K') tt = TokenType::K;
+        else if(c == 'P') tt = TokenType::P;
+        else if(c == 'I') tt = TokenType::I;
+        else if(c == 'T') tt = TokenType::T;
+        else if(c == 'C'){
+            is >> c;
+            if(c == 'I') tt = TokenType::CI;
+            else if(c == 'F') tt = TokenType::CF;
+            else if(c == 'C') tt = TokenType::CC;
+            else if(c == 'B') tt = TokenType::CB;
+            else throw std::runtime_error("Invalid TokenType value");
+        }
+        else throw std::runtime_error("Invalid TokenType value");
+        return is;
+    }
     struct Token {
         TokenType type;
         int id;
@@ -93,6 +112,15 @@ namespace lexer{
         }
         friend std::ostream& operator<< (std::ostream& os, const Token& token) {
             return os << "(" << token.type << ", " << token.id << ")";
+        }
+        friend std::istream& operator>> (std::istream& is, Token& token) {
+            char c;
+            is >> c, assert(c == '(');
+            is >> token.type;
+            is >> c, assert(c == ',');
+            is >> token.id;
+            is >> c, assert(c == ')');
+            return is;
         }
         [[nodiscard]] string toString() const {
             std::stringstream ss;

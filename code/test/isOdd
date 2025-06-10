@@ -1,0 +1,26 @@
+var ans = 1;
+var isOdd : Bool;
+var judge = 0;
+fun IsOdd() : Void{
+    var cnt = 0;
+    while(judge > 1){
+        judge = judge - 2;
+        cnt = cnt + 1;
+    }
+    if(judge == 1){
+        isOdd = 1;
+    }
+    else{
+        isOdd = 0;
+    }
+    while(cnt > 0){
+        judge = judge + 2;
+        cnt = cnt - 1;
+    }
+    return;
+}
+fun main() : Int {
+    judge = 10;
+    IsOdd();
+    return isOdd;
+}

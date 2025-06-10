@@ -5,6 +5,7 @@
 #ifndef SYMBOL_H
 #define SYMBOL_H
 #include <string>
+#include <utility>
 #include <vector>
 #include <variant>
 #include "lexer.h"
@@ -40,6 +41,7 @@ namespace symbol{
                 default: throw std::runtime_error("Undefined type.");
             }
         }
+
         [[nodiscard]] string toString() const {
             switch(type){
                 case TVAL::Int: return "Int";
@@ -63,12 +65,13 @@ namespace symbol{
     constexpr SymbolType BOOL{TVAL::Bool, {nullptr}};
     constexpr SymbolType VOID{TVAL::Void, {nullptr}};
 
-//    using SymbolTypeTable = vector<SymbolType>;
+    //    using SymbolTypeTable = vector<SymbolType>;
 
-//    inline SymbolTypeTable{INT, FLOAT, CHAR, BOOL, VOID};
+    //    inline SymbolTypeTable{INT, FLOAT, CHAR, BOOL, VOID};
 
     bool isTypeToken(const Token &token);
-//    const SymbolType* tokenToType(const Token &token);
+
+    //    const SymbolType* tokenToType(const Token &token);
 
     enum class SymbolKind {
         FUN, PROCESS, CONST, TYPE, VAR, VAL
@@ -85,18 +88,19 @@ namespace symbol{
         FunInfo() = default;
 
         FunInfo(const int level, const int off, const int stackSize, ParamInfo *paramInfoPtr,
-                const int entry, const int entryM) : level(level), off(off), stackSize(stackSize), entry(entry), entryM(entryM),
-                                   paramInfoPtr(paramInfoPtr) {
+                const int entry, const int entryM) : level(level), off(off), stackSize(stackSize), entry(entry),
+                                                     entryM(entryM),
+                                                     paramInfoPtr(paramInfoPtr) {
         }
     };
 
     using SymbolInfoPtr = std::variant<
         std::pair<int, int>, // v
-        FunInfo*,    // funPtr
-        int,         // 用于 CI
-        float,       // CF
-        char,        // CC
-        bool         // CB
+        FunInfo *, // funPtr
+        int, // 用于 CI
+        float, // CF
+        char, // CC
+        bool // CB
     >;
 
     struct TempSymbol {
@@ -120,6 +124,13 @@ namespace symbol{
         const SymbolType *type;
         const SymbolKind kind;
         SymbolInfoPtr ptr;
+        int id;
+
+        Symbol() = delete;
+
+        Symbol(const Token &token, const SymbolType *type, const SymbolKind &kind, SymbolInfoPtr ptr,
+               const int id) : token(token), type(type), kind(kind), ptr(std::move(ptr)), id(id) {
+        }
 
         // union SymbolInfoPtr {
         //     int vPtr;
@@ -143,6 +154,7 @@ namespace symbol{
             }
             return pos;
         }
+
         [[nodiscard]] const_iterator findByToken(const Token &tk) const {
             auto pos = this->begin();
             while(pos != this->end()){

@@ -17,6 +17,8 @@ add_executable(code main.cpp
         parser.h
         symbol.cpp
         symbol.h
+        quad.cpp
+        quad.h
 )
-#target_link_libraries(code PRIVATE fmt::fmt)
 target_compile_options(code PRIVATE -Wall)
+#target_link_libraries(code PRIVATE fmt::fmt)

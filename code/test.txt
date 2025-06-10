@@ -1,2 +1,12 @@
-fun main() : Void {
+fun Hanoi(n : Int) : Int{
+    if(n == 1){
+        return 1;
+    }
+    else{
+        return Hanoi(n - 1) + 1 + Hanoi(n - 1);
+    }
+}
+fun main() : Int {
+    var n = 10;
+    return Hanoi(n);
 }

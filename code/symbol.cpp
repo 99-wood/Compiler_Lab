@@ -38,6 +38,7 @@ namespace symbol{
     TempSymbol::TempSymbol(const Symbol &symbol) : token(symbol.token), type(symbol.type), kind(symbol.kind), ptr(symbol.ptr) {
         if(symbol.kind == SymbolKind::FUN || symbol.kind == SymbolKind::PROCESS || symbol.kind == SymbolKind::TYPE)
             throw std::runtime_error("Cannot trans Symbol to TempSymbol.");
+        if(symbol.token.type == lexer::TokenType::I) token.id = symbol.id;
         // else if(kind == SymbolKind::VAL || kind == SymbolKind::VAR){
         //     ptr.vPtr = symbol.ptr.vPtr;
         // }
@@ -53,6 +54,7 @@ namespace symbol{
 
     TempSymbol::TempSymbol(const Token &token, const SymbolType *type, const SymbolKind &kind,
                            SymbolInfoPtr ptr) : token(token), type(type), kind(kind), ptr(std::move(ptr)) {
+        assert(kind != SymbolKind::FUN);
     }
 
     int TempSymbol::getVal() const {

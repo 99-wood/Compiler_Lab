@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 #include "lexer.h"
 #include "parser.h"
+#include "quad.h"
 
 using std::cin;
 using std::cout;
@@ -50,19 +51,33 @@ int main() {
         for(const auto parseErr = parser.getErr(); const auto& s : parseErr) cout << s << endl;
     }
     else{
+        cout << "---------------------------Target Code--------------------------\n";
         const auto res = parser.getRes();
         for(size_t i = 0; i < res.size(); ++i){
             cout << i << ": " << res[i] << endl;
         }
+        cout << "------------------------Intermediate Code------------------------\n";
         const auto mid = parser.getMid();
         for(size_t i = 0; i < mid.size(); ++i){
             cout << i << ": " << mid[i] << endl;
         }
+        cout << "-------------------------Running Results-------------------------\n";
+        quad::QuadRunner runner(mid);
+        runner.run();
+        const auto mem= runner.getRes();
+        for(const auto [token, res] : mem){
+            cout << token << " = "
+                 << std::right << std::setw(10) << res << " or "
+                 << std::right << std::setw(10) << std::bit_cast<float>(res) << endl;
+        }
+        // 0 1 2 3 4 5 6  7  8  9 10 11
+        // 0 1 1 2 3 5 8 13 21 34 55 89
+
     }
     for(const auto parseWarn = parser.getWarn(); const auto& s : parseWarn){
         std::cout << "\033[33m" << s << endl << "\033[0m";
     }
-    cout << "Enter to close screen";
-    getchar();
+    // cout << "Enter to close screen";
+    // getchar();
     return 0;
 }
