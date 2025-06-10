@@ -666,7 +666,7 @@ namespace parser{
             off += funSymbol.type->size();
             ans.emplace_back("MOV", "DS", addrToString("ES", 0, 4)); // 返回地址基址压栈
             ans.emplace_back("MOV", std::to_string(retOff), addrToString("ES", 4, 4)); // 返回地址偏移量压栈
-            const int JMP = static_cast<int>(ans.size());
+            const int JMP_ARG = static_cast<int>(ans.size());
             ans.emplace_back("MOV", "?", addrToString("ES", 8, 4)); // 跳转语句压栈
             ans.emplace_back("MOV", offsetToString(12, 4), addrToString("ES", 12, 4)); // 全局 display 压栈
             int tmpES = push("ES", off);
@@ -686,7 +686,7 @@ namespace parser{
             pop("ES", tmpES);
             ans.emplace_back("MOV", "ES", "DS"); // 段更换
             ans.emplace_back("JMP", std::to_string(funInfo->entry)); // 跳转执行
-            ans[JMP] = Quad("JMP", std::to_string(ans.size())); //反填跳转语句;
+            ans[JMP_ARG] = Quad("MOV", std::to_string(ans.size()), addrToString("ES", 8, 4)); //反填压栈跳转;
             const int STACK_FREE = static_cast<int>(ans.size());
             ans.emplace_back("STACK_FREE", "?");
             freeQuat.emplace_back(STACK_FREE, funSymbol.token); // 存储释放空间语句以备反填

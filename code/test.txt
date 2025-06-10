@@ -1,7 +1,7 @@
 var a, b : Int;
-fun f(x : Int) : Int {
-    return x;
+fun f() : Int {
+    return 1;
 }
 fun main() : Int {
-    return f(1);
+    return 1;
 }
