@@ -119,6 +119,7 @@ namespace symbol{
         const SymbolType *type;
         const SymbolKind kind;
         SymbolInfoPtr ptr;
+
         // union SymbolInfoPtr {
         //     int vPtr;
         //     FunInfo *funPtr;
