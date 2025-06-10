@@ -227,7 +227,7 @@ namespace parser{
         static string addrToString(const string &sreg, const int off, const int size) {
             assert(sreg == "DS" || sreg == "ES");
             if(off == 0){
-                return "[" + sreg + ", " + std::to_string(size) + "]";
+                return "[" + sreg + ": " + std::to_string(size) + "]";
             }
             else{
                 return "[" + sreg + " + " + std::to_string(off) + ": " + std::to_string(size) + "]";
@@ -354,7 +354,7 @@ namespace parser{
             assert(DS == "DS");
             ans.emplace_back("MOV",
                              "[DS + " + std::to_string(off) + ", " + std::to_string(size) + "]",
-                             "[ES + BX, " + std::to_string(size) + "]");
+                             "[ES + BX: " + std::to_string(size) + "]");
         }
 
         // 跳转到 BX
@@ -947,11 +947,12 @@ namespace parser{
             const TempSymbol res = funSymbol.type == &VOID ? TempSymbol{Token{lexer::TokenType::T, -1}, &VOID, SymbolKind::CONST, 0} : newTempSymbol(funSymbol.type, off);
             mid.emplace_back("CALL",
                              std::to_string(std::get<FunInfo*>(funSymbol.ptr)->entryM),
-                             res.token.toString());
+                             funSymbol.type == &VOID ? "_" : res.token.toString());
 //            const int retOff = funSymbol.type == &VOID ? 0 : off;
 //            off += funSymbol.type->size();
             ans.emplace_back("MOV", "DS", addrToString("ES", 0, 4)); // 返回地址基址压栈
-            ans.emplace_back("MOV", std::to_string(std::get<std::pair<int, int>>(res.ptr).second), addrToString("ES", 4, 4)); // 返回地址偏移量压栈
+            if(funSymbol.type == &VOID) ans.emplace_back("MOV", std::to_string(-1), addrToString("ES", 4, 4)); // 返回地址偏移量压栈
+            else ans.emplace_back("MOV", std::to_string(std::get<std::pair<int, int>>(res.ptr).second), addrToString("ES", 4, 4)); // 返回地址偏移量压栈
             const int JMP_ARG = static_cast<int>(ans.size());
             ans.emplace_back("MOV", "?", addrToString("ES", 8, 4)); // 跳转语句压栈
             ans.emplace_back("MOV", offsetToString(12, 4), addrToString("ES", 12, 4)); // 全局 display 压栈
@@ -1777,10 +1778,10 @@ namespace parser{
             symbolTableStack.emplace_back();
             const int STACK_ALLOC = static_cast<int>(ans.size());
             ans.emplace_back("STACK_ALLOC", "0");
-            ans.emplace_back("MOV", "0", "[0, 0]");
-            ans.emplace_back("MOV", "0", "[0, 4]");
-            ans.emplace_back("MOV", "0", "[0, 8]");
-            ans.emplace_back("MOV", "0", "[0, 12]");
+            ans.emplace_back("MOV", "0", "[0: 4]");
+            ans.emplace_back("MOV", "0", "[4: 4]");
+            ans.emplace_back("MOV", "0", "[8: 4]");
+            ans.emplace_back("MOV", "0", "[12: 4]");
             level = 0;
             if(int off = 16; !parseDefStmtList(off)){
                 return false;

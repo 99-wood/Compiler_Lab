@@ -1,15 +1,2 @@
-fun main() : Int {
-    var x = 3.14e2;
-    val y = 0-42;
-    val z = x + y * Int(5.1e-15);
-
-    if (x >= y && y != 0) {
-        return x / y;
-    } else {
-        val msg = 'A';
-        val escape = '\\';
-        val ch = 'c';
-        val b = 1;
-    }
-
+fun main() : Void {
 }
