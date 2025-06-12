@@ -3,7 +3,7 @@ fun IsPrime(n: Int): Int {
         return 0;
     }
     var i = 2;
-    while (i < n) {
+    while (i * i <= n) {
         var prod = i * (n / i);
         if (prod == n) {
             return 0;
@@ -26,7 +26,7 @@ fun CountPrimes(limit: Int): Int {
 }
 
 fun main(): Int {
-    var n = 100;
+    var n = 100000;
     var primeCount = CountPrimes(n);
     return primeCount;
 }

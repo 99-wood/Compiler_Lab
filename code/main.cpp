@@ -10,6 +10,7 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
+using namespace std::chrono;
 
 std::string readFileToString(const std::string &fileName) {
     const std::ifstream file(fileName);
@@ -178,46 +179,51 @@ int main() {
         for(size_t i = 0; i < optimizedMid.size(); ++i){
             cout << i << ": " << optimizedMid[i] << endl;
         }
-        cout << "---------------Intermediate Code Running Results----------------\n";
+        cout << "--------------------------Target Code---------------------------\n";
         const vector<quad::Quad> targetCode = parser.getRes();
         for(size_t i = 0; i < targetCode.size(); ++i){
             cout << i << ": " << targetCode[i] << endl;
         }
-
-        cout << "----------Optimized Intermediate Code Running Results-----------\n";
+        cout << "---------------Intermediate Code Running Results----------------\n";
         quad::QuadRunner runner(mid);
+        auto start1 = steady_clock::now();  // 开始时间
         runner.run();
+        auto end1 = steady_clock::now();    // 结束时间
         for(const auto mem = runner.getRes();
                 const auto [token, res] : mem){
             cout << token << " = "
                  << std::right << std::setw(10) << res << " or "
                  << std::right << std::setw(10) << std::bit_cast<float>(res) << endl;
         }
-
-        cout << "-------------------------Running Results------------------------\n";
+        cout << "[Time: " << duration_cast<milliseconds>(end1 - start1).count() << " ms]" << endl;
+        cout << "----------Optimized Intermediate Code Running Results-----------\n";
         quad::QuadRunner optimizedRunner(optimizedMid);
+        auto start2 = steady_clock::now();
         optimizedRunner.run();
+        auto end2 = steady_clock::now();
         for(const auto mem = optimizedRunner.getRes();
                 const auto [token, res] : mem){
             cout << token << " = "
                  << std::right << std::setw(10) << res << " or "
                  << std::right << std::setw(10) << std::bit_cast<float>(res) << endl;
         }
+        cout << "[Time: " << duration_cast<milliseconds>(end2 - start2).count() << " ms]" << endl;
 
         cout << "-------------------Target Code Running Results------------------\n";
         target::TargetRuner targetRuner(targetCode);
+        auto start3 = steady_clock::now();
         if(targetRuner.run() != 0){
             cout << "RUNTIME_ERR";
         }
         else{
+            auto end3 = steady_clock::now();
             const int res = targetRuner.getFirst();
             cout << "ans" << " = "
                     << std::right << std::setw(10) << res << " or "
                     << std::right << std::setw(10) << std::bit_cast<float>(res) << endl;
+            cout << "[Time: " << duration_cast<milliseconds>(end3 - start3).count() << " ms]" << endl;
         }
 
     }
-    // cout << "Enter to close screen";
-    // getchar();
     return 0;
 }
