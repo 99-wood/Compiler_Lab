@@ -41,24 +41,24 @@
 
 ## 改造后语法
 
-- <程序> $\rightarrow$ <定义语句列表> $\textcircled{1}$
-- <定义语句列表> $\rightarrow$ <定义语句><定义语句列表'> $\textcircled{1}$
-- <定义语句列表'> $\rightarrow$ <定义语句><定义语句列表'> $\textcircled{1}$ | $\epsilon$
-- <定义语句> $\rightarrow$ <函数定义> $\textcircled{1}$ | <变量定义语句> $\textcircled{2}$ | <常量定义语句> $\textcircled{3}$
-- <函数定义> $\rightarrow$ $\text{fun}$ <标识符>(<参数列表>) : <类型> <代码块> $\textcircled{1}$
-- <参数列表> $\rightarrow$ $\epsilon$ $\textcircled{1}$ | <标识符> : <类型>, <参数列表> $\textcircled{2}$
-- <代码块> $\rightarrow$ {<语句列表>} $\textcircled{1}$
-- <语句列表> $\rightarrow$ $\epsilon$ $\textcircled{1}$ | <语句> <语句列表> $\textcircled{2}$ | <代码块><语句列表> $\textcircled{3}$
-- <语句> $\rightarrow$ <变量定义语句> $\textcircled{1}$ | <常量定义语句> $\textcircled{2}$ | <表达式语句> $\textcircled{3}$ | <if 语句> $\textcircled{4}$ | <while 语句> $\textcircled{5}$ | <返回语句> $\textcircled{6}$
-- <变量定义语句> $\rightarrow$ $\text{var}$ <标识符><变量定义后缀> $\textcircled{1}$
-- <变量定义后缀> $\rightarrow$ <初始化列表后缀> $\textcircled{1}$ | <标识符列表后缀> $\textcircled{2}$
-- <初始化列表后缀> $\rightarrow$ = <表达式><初始化列表后缀'> $\textcircled{1}$
-- <初始化列表后缀'> $\rightarrow$ ;$\textcircled{1}$ | ,<标识符> = <表达式><初始化列表后缀'> $\textcircled{2}$
-- <标识符列表后缀> $\rightarrow$ : <类型>; $\textcircled{1}$ | ,<标识符><标识符列表后缀> $\textcircled{2}$
-- <常量定义语句> $\rightarrow$ $\text{val}$ <初始化列表>; $\textcircled{1}$
-- <初始化列表> $\rightarrow$ <标识符> = <表达式><初始化列表'> $\textcircled{1}$
-- <初始化列表'> $\rightarrow$ $\epsilon$ | <标识符> = <表达式>, <初始化列表'> $\textcircled{1}$
-- <表达式语句> $\rightarrow$ <表达式>; $\textcircled{1}$
+- <程序> $\rightarrow$ <定义语句列表> ①
+- <定义语句列表> $\rightarrow$ <定义语句><定义语句列表'> ①
+- <定义语句列表'> $\rightarrow$ <定义语句><定义语句列表'> ① | $\epsilon$
+- <定义语句> $\rightarrow$ <函数定义> ① | <变量定义语句> ② | <常量定义语句> ③
+- <函数定义> $\rightarrow$ $\text{fun}$ <标识符>(<参数列表>) : <类型> <代码块> ①
+- <参数列表> $\rightarrow$ $\epsilon$ ① | <标识符> : <类型>, <参数列表> ②
+- <代码块> $\rightarrow$ {<语句列表>} ①
+- <语句列表> $\rightarrow$ $\epsilon$ ① | <语句> <语句列表> ② | <代码块><语句列表> ③
+- <语句> $\rightarrow$ <变量定义语句> ① | <常量定义语句> ② | <表达式语句> ③ | <if 语句> ④ | <while 语句> ⑤ | <返回语句> ⑥
+- <变量定义语句> $\rightarrow$ $\text{var}$ <标识符><变量定义后缀> ①
+- <变量定义后缀> $\rightarrow$ <初始化列表后缀> ① | <标识符列表后缀> ②
+- <初始化列表后缀> $\rightarrow$ = <表达式><初始化列表后缀'> ①
+- <初始化列表后缀'> $\rightarrow$ ;① | ,<标识符> = <表达式><初始化列表后缀'> ②
+- <标识符列表后缀> $\rightarrow$ : <类型>; ① | ,<标识符><标识符列表后缀> ②
+- <常量定义语句> $\rightarrow$ $\text{val}$ <初始化列表>; ①
+- <初始化列表> $\rightarrow$ <标识符> = <表达式><初始化列表'> ①
+- <初始化列表'> $\rightarrow$ $\epsilon$ | <标识符> = <表达式>, <初始化列表'> ①
+- <表达式语句> $\rightarrow$ <表达式>; ①
 - <表达式> $\rightarrow$ <赋值表达式>
 - <赋值表达式> $\rightarrow$ <变量标识符> = <赋值表达式> | <逻辑表达式>
 - <逻辑表达式> $\rightarrow$ <逻辑或表达式>
@@ -83,13 +83,15 @@
 ## 分析表
 | 左部非终极符 |`类型关键字`|`标识符`|`fun`|`var`|`val`|`if`|`else`|`while`|`return`| `(` | `)` | `{` | `}` | `,`| `;` | `:` | `=`| 
 |-------------|-----------|-------|-----|-----|-----|----|------|-------|--------|-----|-----|-----|-----|----|-----|-----|-----|
-| `<定义语句>` |           |       | $\textcircled{1}$ |  $\textcircled{2}$ |  $\textcircled{3}$ |
-| `<参数列表>` |           |$\textcircled{2}$|||     |    |      |       |        |     |$\textcircled{1}$
-| `<语句列表>` |           |$\textcircled{2}$|$\textcircled{2}$|$\textcircled{2}$|$\textcircled{2}$|$\textcircled{2}$||$\textcircled{2}$|$\textcircled{2}$|     ||$\textcircled{3}$|$\textcircled{1}$|
-| `<语句>`    |           |$\textcircled{3}$||$\textcircled{1}$|$\textcircled{2}$|$\textcircled{4}$||$\textcircled{5}$|$\textcircled{6}$
-|`<变量定义后缀>`|         |       |     |     |     |    |      |        |       |     |     |      |    |    |     | $\textcircled{1}$ | $\textcircled{2}$
-|`<初始化列表后缀'>`|      |       |     |     |      |   |      |         |       |    |     |       |    |$\textcircled{2}$|$\textcircled{1}$|
-|`<初始化列表后缀'>`|      |       |     |     |      |   |      |         |       |    |     |       |    |$\textcircled{2}$||$\textcircled{1}$|
+| `<定义语句>` |           |       | ① |  ② |  ③ |
+| `<参数列表>` |           |②|||     |    |      |       |        |     |①
+| `<语句列表>` |           |②|②|②|②|②||②|②|     ||③|①|
+| `<语句>`    |           |③||①|②|④||⑤|⑥
+|`<变量定义后缀>`|         |       |     |     |     |    |      |        |       |     |     |      |    |    |     | ① | ②
+|`<初始化列表后缀'>`|      |       |     |     |      |   |      |         |       |    |     |       |    |②|①|
+|`<初始化列表后缀'>`|      |       |     |     |      |   |      |         |       |    |     |       |    |②||①|
+
+
 ## 变元中英文对照（AI 生成）
 
 | 中文变元         | 英文命名建议                    |
