@@ -7,17 +7,17 @@
 #include <codecvt>
 
 namespace quad{
-    bool QuadRunner::isToken(const string &arg) {
+    bool Quad::isToken(const string &arg) {
         assert(!arg.empty());
         return arg[0] == '(';
     }
 
-    bool QuadRunner::isEmpty(const string &arg) {
+    bool Quad::isEmpty(const string &arg) {
         assert(!arg.empty());
         return arg[0] == '_';
     }
 
-    Token QuadRunner::getToken(const string &arg) {
+    Token Quad::getToken(const string &arg) {
         assert(isToken(arg));
         Token token{};
         std::stringstream ss;
@@ -26,7 +26,7 @@ namespace quad{
         return token;
     }
 
-    int QuadRunner::getInt(const string &arg) {
+    int Quad::getInt(const string &arg) {
         assert(!isToken(arg) && !isEmpty(arg));
         int val;
         std::stringstream ss;
@@ -40,21 +40,21 @@ namespace quad{
             const auto &[op, arg1, arg2, result] = args[currentArg];
             ++currentArg;
             if(op == "JMP"){
-                currentArg = getInt(arg1);
+                currentArg = Quad::getInt(arg1);
             }
             else if(op == "MOV"){
-                Token dest = getToken(arg2);
-                if(isToken(arg1)){
-                    Token src = getToken(arg1);
+                Token dest = Quad::getToken(arg2);
+                if(Quad::isToken(arg1)){
+                    Token src = Quad::getToken(arg1);
                     mem[dest] = mem[src];
                 }
                 else{
-                    mem[dest] = getInt(arg1);
+                    mem[dest] = Quad::getInt(arg1);
                 }
             }
             else if(op == "RET"){
-                if(isEmpty(arg1)) return {false, 0};
-                return {true, mem[getToken(arg1)]};
+                if(Quad::isEmpty(arg1)) return {false, 0};
+                return {true, Quad::isToken(arg1) ? mem[Quad::getToken(arg1)] : Quad::getInt(arg1)};
             }
             else if(op == "CALL"){
                 std::map<Token, int, cmp> newMem;
@@ -74,54 +74,54 @@ namespace quad{
                     assert(!global.contains(src));
                     newMem[dest] = mem[src];
                 }
-                const int to = getInt(arg1);
+                const int to = Quad::getInt(arg1);
                 const auto tmp = currentArg;
                 currentArg = to;
                 const auto [haveReturnValue, returnValue] = execute(newMemDivice);
                 currentArg = tmp;
-                if(isEmpty(arg2)){
+                if(Quad::isEmpty(result)){
                     assert(!haveReturnValue);
                 }
                 else{
                     assert(haveReturnValue);
-                    Token dest = getToken(result);
+                    Token dest = Quad::getToken(result);
                     mem[dest] = returnValue;
                 }
             }
             else if(op == "JZ"){
-                const int to = getInt(arg2);
-                if(isToken(arg1)){
-                    if(const Token src = getToken(arg1); !mem[src]) currentArg = to;
+                const int to = Quad::getInt(arg2);
+                if(Quad::isToken(arg1)){
+                    if(const Token src = Quad::getToken(arg1); !mem[src]) currentArg = to;
                 }
                 else{
-                    if(const int val = getInt(arg1); !val) currentArg = to;
+                    if(const int val = Quad::getInt(arg1); !val) currentArg = to;
                 }
             }
-            else if(op == "ADD" || op == "DEL" || op == "MUL" || op == "DIV" ||
-                    op == "ADDF" || op == "DELF" || op == "MULF" || op == "DIVF" ||
+            else if(op == "ADD" || op == "SUB" || op == "MUL" || op == "DIV" ||
+                    op == "ADDF" || op == "SUBF" || op == "MULF" || op == "DIVF" ||
                     op == "G" || op == "GE" || op == "L" || op == "LE" || op == "E" || op == "NE" ||
                     op == "GF" || op == "GEF" || op == "LF" || op == "LEF" || op == "EF" || op == "NEF" ||
                     op == "AND" || op == "OR"){
-                const Token res = getToken(result);
-                if(isToken(arg1)){
-                    const Token x = getToken(arg1);
-                    if(isToken(arg2)){
-                        const Token y = getToken(arg2);
+                const Token res = Quad::getToken(result);
+                if(Quad::isToken(arg1)){
+                    const Token x = Quad::getToken(arg1);
+                    if(Quad::isToken(arg2)){
+                        const Token y = Quad::getToken(arg2);
                         mem[res] = genBinaryOperation(op)(mem[x], mem[y]);
                     }
                     else{
-                        const int y = getInt(arg2);
+                        const int y = Quad::getInt(arg2);
                         mem[res] = genBinaryOperation(op)(mem[x], y);
                     }
                 }
                 else{
-                    const int x = getInt(arg1);
-                    if(isToken(arg2)){
-                        const Token y = getToken(arg2);
+                    const int x = Quad::getInt(arg1);
+                    if(Quad::isToken(arg2)){
+                        const Token y = Quad::getToken(arg2);
                         mem[res] = genBinaryOperation(op)(x, mem[y]);
                     }
                     else{
-                        const int y = getInt(arg2);
+                        const int y = Quad::getInt(arg2);
                         mem[res] = genBinaryOperation(op)(x, y);
                     }
                 }
@@ -131,13 +131,13 @@ namespace quad{
                     op == "F2I" || op == "F2F" || op == "F2C" || op == "F2B" ||
                     op == "C2I" || op == "C2F" || op == "C2C" || op == "C2B" ||
                     op == "B2I" || op == "B2F" || op == "B2C" || op == "B2B" ){
-                const Token dest = getToken(arg2);
-                if(isToken(arg1)){
-                    const Token src = getToken(arg1);
+                const Token dest = Quad::getToken(arg2);
+                if(Quad::isToken(arg1)){
+                    const Token src = Quad::getToken(arg1);
                     mem[dest] = genUnaryOperation(op)(mem[src]);
                 }
                 else{
-                    const int src = getInt(arg1);
+                    const int src = Quad::getInt(arg1);
                     mem[dest] = genUnaryOperation(op)(src);
                 }
             }
@@ -153,7 +153,7 @@ namespace quad{
         if(op == "ADD"){
             return [&](const int &x, const int &y){return x + y;};
         }
-        if(op == "DEL"){
+        if(op == "SUB"){
             return [&](const int &x, const int &y){return x - y;};
         }
         if(op == "MUL"){
@@ -173,7 +173,7 @@ namespace quad{
         if(op == "ADDF"){
             return [&](const int &x, const int &y){return std::bit_cast<int>(std::bit_cast<float>(x) + std::bit_cast<float>(y));};
         }
-        if(op == "DELF"){
+        if(op == "SUBF"){
             return [&](const int &x, const int &y){return std::bit_cast<int>(std::bit_cast<float>(x) - std::bit_cast<float>(y));};
         }
         if(op == "MULF"){
@@ -235,6 +235,15 @@ namespace quad{
         }
         if(op == "B2F"){
             return [&](const int &x){return std::bit_cast<int>(static_cast<float>(x));};
+        }
+        if(op == "F2I"){
+            return [&](const int &x){return static_cast<int>(std::bit_cast<float>(x));};
+        }
+        if(op == "C2I"){
+            return [&](const int &x){return static_cast<int>(x);};
+        }
+        if(op == "B2I"){
+            return [&](const int &x){return static_cast<int>(x);};
         }
         if(op == "I2C"){
             return [&](const int &x){return static_cast<char>(x);};

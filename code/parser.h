@@ -344,7 +344,7 @@ namespace parser{
             assert(BX == "BX");
             assert(DS == "DS");
             ans.emplace_back("MOV",
-                             "[DS + " + std::to_string(off) + ", " + std::to_string(size) + "]",
+                             "[DS + " + std::to_string(off) + ": " + std::to_string(size) + "]",
                              "[ES + BX: " + std::to_string(size) + "]");
         }
 
@@ -447,7 +447,7 @@ namespace parser{
                 //                res.type = type;
                 //                res.kind = SymbolKind::VAR;
                 //                res.ptr = std::pair<int, int>(level, off);
-                auto [lv, of] = std::get<std::pair<int, int> >(res.ptr);
+                auto [lv, of] = std::get<std::pair<int, int> >(symbol.ptr);
                 // TODO: 优化传值
                 // const int tmpES = push("ES", off);
                 if(lv < level) mov("ES", 12 + lv * 4, 4);
@@ -846,11 +846,11 @@ namespace parser{
                                          res.token.toString());
                     }
                     else{
-                        ans.emplace_back("DELF",
+                        ans.emplace_back("SUBF",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, FLOAT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(res.ptr).second, FLOAT.size()));
-                        mid.emplace_back("DELF",
+                        mid.emplace_back("SUBF",
                                          x.token.toString(),
                                          y.token.toString(),
                                          res.token.toString());
@@ -891,11 +891,11 @@ namespace parser{
                                          res.token.toString());
                     }
                     else{
-                        ans.emplace_back("DEL",
+                        ans.emplace_back("SUB",
                                          offsetToString(std::get<std::pair<int, int> >(x.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(y.ptr).second, INT.size()),
                                          offsetToString(std::get<std::pair<int, int> >(res.ptr).second, INT.size()));
-                        mid.emplace_back("DEL",
+                        mid.emplace_back("SUB",
                                          x.token.toString(),
                                          y.token.toString(),
                                          res.token.toString());
@@ -1046,7 +1046,7 @@ namespace parser{
             ans.emplace_back("MOV", offsetToString(12, 4), addrToString("ES", 12, 4)); // 全局 display 压栈
             int tmpES = push("ES", off);
             CALL.arg2 += std::to_string(static_cast<int>(args.size())) + " ";
-            for(int i = 0, newOff = 16; i < args.size(); newOff += args[i].type->size(), ++i){
+            for(int i = 0, newOff = 16; i < static_cast<int>(args.size()); newOff += args[i].type->size(), ++i){
                 if(args[i].type != paramInfo[i].type){
                     addErrNow("Function parameter mismatch");
                     isSuccess = false;
@@ -1470,17 +1470,17 @@ namespace parser{
             }
             else if(expect(lexer::TokenType::CI) || expect(lexer::TokenType::CF) || expect(lexer::TokenType::CC) ||
                     expect(lexer::TokenType::CB)){
-                Token token = peek();
+                const Token token = peek();
                 next();
                 res.kind = SymbolKind::CONST;
                 if(token.type == lexer::TokenType::CI){
                     res.type = &INT;
-                    assert(token.id - 1 <= ci.size());
+                    assert(token.id - 1 <= static_cast<int>(ci.size()));
                     res.ptr = ci[token.id - 1];
                 }
                 else if(token.type == lexer::TokenType::CF){
                     res.type = &FLOAT;
-                    assert(token.id - 1 <= cf.size());
+                    assert(token.id - 1 <= static_cast<int>(cf.size()));
                     res.ptr = cf[token.id - 1];
                 }
                 else if(token.type == lexer::TokenType::CC){
@@ -1891,7 +1891,7 @@ namespace parser{
                 const TempSymbol res = handleCallFunction(symbolTableStack[0][mainPos], {}, off, isSuccess);
                 if(res.type != &VOID)
                     ans.emplace_back(
-                        "MOV", offsetToString(std::get<std::pair<int, int> >(res.ptr).second, res.type->size()), "[0]");
+                        "MOV", offsetToString(std::get<std::pair<int, int> >(res.ptr).second, res.type->size()), "[0: 4]");
                 ans[STACK_ALLOC] = Quad("STACK_ALLOC", std::to_string(off));
                 // 反填
                 for(const auto &[id, funName] : allocQuat){

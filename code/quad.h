@@ -32,6 +32,16 @@ namespace quad{
                    << ", " << (q.result.empty() ? "_" : q.result)
                    << ")";
         }
+
+
+        static bool isToken(const string &arg);
+
+        static bool isEmpty(const string &arg);
+
+        static Token getToken(const string &arg);
+
+        static int getInt(const string &arg);
+
     };
 
 
@@ -63,15 +73,6 @@ namespace quad{
         std::map<Token, int, cmp> global;
         size_t currentArg{};
         bool finish{false};
-
-        static bool isToken(const string &arg);
-
-        static bool isEmpty(const string &arg);
-
-        static Token getToken(const string &arg);
-
-        static int getInt(const string &arg);
-
         std::pair<bool, int> execute(MemDevice &mem);
 
         static std::function<int(int, int)> genBinaryOperation(const string &op);
