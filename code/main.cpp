@@ -42,8 +42,18 @@ std::pair<int, int> parseErrorLineCol(const std::string& message) {
     sscanf(message.c_str(), "Wrong on %d line %d column.", &line, &column);
     return {line, column};
 }
-int extractTokenNumber(const std::string& message) {
+int extractErrTokenNumber(const std::string& message) {
     const std::regex pattern(R"(Wrong on (\d+) token)");
+    std::smatch match;
+
+    if (std::regex_search(message, match, pattern)) {
+        return std::stoi(match[1]);  // 提取第一个捕获组里的数字
+    } else {
+        return -1;  // 找不到就返回 -1，表示错误
+    }
+}
+int extractWarnTokenNumber(const std::string& message) {
+    const std::regex pattern(R"(Warn on (\d+) token)");
     std::smatch match;
 
     if (std::regex_search(message, match, pattern)) {
@@ -107,16 +117,17 @@ int main() {
 
     parser::Parser parser;
     parser.changeStr(tokens, ci, cf, I);
+    auto tokenToSize = [&](const lexer::Token& token) {
+        if(token.type == lexer::TokenType::I) return I[token.id - 1].size();
+        if(token.type == lexer::TokenType::K) return lexer::K[token.id - 1].size();
+        if(token.type == lexer::TokenType::P) return lexer::P[token.id - 1].size();
+        else return static_cast<size_t>(1);
+    };
     if(!parser.run()){
-        auto tokenToSize = [&](const lexer::Token& token) {
-            if(token.type == lexer::TokenType::I) return I[token.id - 1].size();
-            if(token.type == lexer::TokenType::K) return lexer::K[token.id - 1].size();
-            if(token.type == lexer::TokenType::P) return lexer::P[token.id - 1].size();
-            else return static_cast<size_t>(1);
-        };
+
         for(const auto parseErr = parser.getErr(); const auto &s : parseErr){
             cout << s << endl;
-            const int x = extractTokenNumber(s);
+            const int x = extractErrTokenNumber(s);
             if(x == -1) continue;
             const auto [l, c] = tokenLoacation[x - 1];
             const string errCode = getLineFromString(code, l);
@@ -132,16 +143,26 @@ int main() {
         cout << "------------------------------Warn------------------------------\n";
         for(const auto parseWarn = parser.getWarn(); const auto &s : parseWarn){
             std::cout << "\033[33m" << s << endl << "\033[0m";
+            const int x = extractWarnTokenNumber(s);
+            if(x == -1) continue;
+            const auto [l, c] = tokenLoacation[x - 1];
+            const string errCode = getLineFromString(code, l);
+            cout << errCode << endl;
+            const int tokenLen = tokenToSize(tokens[x - 1]);
+            for(int i = 1; i < c - tokenLen; ++i) cout << " ";
+            for(int i = 1; i <= tokenLen; ++i) cout << "\033[33m" << "~" << "\033[0m";
+            cout << "^";
+            cout << endl;
         }
         cout << "--------------------------Symbol Table--------------------------\n";
         const auto symbolTable = parser.getGlobal();
         cout<< std::right << std::setw(10) << "name"
-                        << std::right << std::setw(5) << "token"
+                        << std::right << std::setw(10) << "token"
                         << std::right << std::setw(10) << "type"
                         << std::right << std::setw(10) << "kind" << endl;
         for(const auto [token, type, kind, ptr, id] : symbolTable){
             cout<< std::right << std::setw(10) << I[token.id - 1]
-                << std::right << std::setw(5) << token
+                << std::right << std::setw(10) << token.toString()
                 << std::right << std::setw(10) << type->toString()
                 << std::right << std::setw(10) << kind << endl;
         }

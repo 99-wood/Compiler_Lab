@@ -1,4 +1,8 @@
+fun f() : Int{
+
+}
 fun main() : Int {
-    var pi = 1e-2;
+    var pi = 1e-5;
+    pi = 1;
     return pi;
 }
