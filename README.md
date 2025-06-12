@@ -7,7 +7,7 @@
 - <程序> $\rightarrow$ <定义语句列表>
 - <定义语句列表> $\rightarrow$ <定义语句><定义语句列表> | <定义语句>
 - <定义语句> $\rightarrow$ <函数定义> | <变量定义语句> | <常量定义语句>
-- <函数定义> $\rightarrow$ $\text{fun}$ <标识符>(参数列表) : <类型> <代码块>
+- <函数定义> $\rightarrow$ $\text{fun}$ <标识符>(<参数列表>) : <类型> <代码块>
 - <参数列表> $\rightarrow$ $\epsilon$ | <标识符> : <类型>, <参数列表>
 - <代码块> $\rightarrow$ {<语句列表>}
 - <语句列表> $\rightarrow$ $\epsilon$ | <语句> <语句列表> | <代码块><语句列表>
@@ -41,25 +41,24 @@
 
 ## 改造后语法
 
-- <程序> $\rightarrow$ <定义语句列表>
-- <定义语句列表> $\rightarrow$ <定义语句><定义语句列表'>
-- <定义语句列表'> $\rightarrow$ <定义语句><定义语句列表'> | $\epsilon$
-- <定义语句> $\rightarrow$ <函数定义> | <变量定义语句> | <常量定义语句>
-- <函数定义> $\rightarrow$ $\text{fun}$ <标识符>(参数列表) : <类型> <代码块>
-- <参数列表> $\rightarrow$ $\epsilon$ | <标识符> : <类型>, <参数列表>
-- <代码块> $\rightarrow$ {<语句列表>}
-- <语句列表> $\rightarrow$ $\epsilon$ | <语句> <语句列表> | <代码块><语句列表>
-- <语句> $\rightarrow$ <变量定义语句> | <常量定义语句> | <表达式语句> | <if 语句> | <while 语句> | <返回语句>
-- <变量定义语句> $\rightarrow$ $\text{var}$ <初始化列表>; | $\text{var}$ <标识符列表> : <类型>;
-- <变量定义语句> $\rightarrow$ $\text{var}$ <标识符><变量定义后缀>
-- <变量定义后缀> $\rightarrow$ <初始化列表后缀> | <标识符列表后缀>
-- <初始化列表后缀> $\rightarrow$ = <表达式><初始化列表后缀'>
-- <初始化列表后缀'> $\rightarrow$ ; | ,<标识符> = <表达式><初始化列表后缀'>
-- <标识符列表后缀> $\rightarrow$ : <类型>; | ,<标识符><标识符列表后缀>
-- <常量定义语句> $\rightarrow$ $\text{val}$ <初始化列表>;
-- <初始化列表> $\rightarrow$ <标识符> = <表达式><初始化列表'>
-- <初始化列表'> $\rightarrow$ $\epsilon$ | <标识符> = <表达式>, <初始化列表'>
-- <表达式语句> $\rightarrow$ <表达式>;
+- <程序> $\rightarrow$ <定义语句列表> $\textcircled{1}$
+- <定义语句列表> $\rightarrow$ <定义语句><定义语句列表'> $\textcircled{1}$
+- <定义语句列表'> $\rightarrow$ <定义语句><定义语句列表'> $\textcircled{1}$ | $\epsilon$
+- <定义语句> $\rightarrow$ <函数定义> $\textcircled{1}$ | <变量定义语句> $\textcircled{2}$ | <常量定义语句> $\textcircled{3}$
+- <函数定义> $\rightarrow$ $\text{fun}$ <标识符>(<参数列表>) : <类型> <代码块> $\textcircled{1}$
+- <参数列表> $\rightarrow$ $\epsilon$ $\textcircled{1}$ | <标识符> : <类型>, <参数列表> $\textcircled{2}$
+- <代码块> $\rightarrow$ {<语句列表>} $\textcircled{1}$
+- <语句列表> $\rightarrow$ $\epsilon$ $\textcircled{1}$ | <语句> <语句列表> $\textcircled{2}$ | <代码块><语句列表> $\textcircled{3}$
+- <语句> $\rightarrow$ <变量定义语句> $\textcircled{1}$ | <常量定义语句> $\textcircled{2}$ | <表达式语句> $\textcircled{3}$ | <if 语句> $\textcircled{4}$ | <while 语句> $\textcircled{5}$ | <返回语句> $\textcircled{6}$
+- <变量定义语句> $\rightarrow$ $\text{var}$ <标识符><变量定义后缀> $\textcircled{1}$
+- <变量定义后缀> $\rightarrow$ <初始化列表后缀> $\textcircled{1}$ | <标识符列表后缀> $\textcircled{2}$
+- <初始化列表后缀> $\rightarrow$ = <表达式><初始化列表后缀'> $\textcircled{1}$
+- <初始化列表后缀'> $\rightarrow$ ;$\textcircled{1}$ | ,<标识符> = <表达式><初始化列表后缀'> $\textcircled{2}$
+- <标识符列表后缀> $\rightarrow$ : <类型>; $\textcircled{1}$ | ,<标识符><标识符列表后缀> $\textcircled{2}$
+- <常量定义语句> $\rightarrow$ $\text{val}$ <初始化列表>; $\textcircled{1}$
+- <初始化列表> $\rightarrow$ <标识符> = <表达式><初始化列表'> $\textcircled{1}$
+- <初始化列表'> $\rightarrow$ $\epsilon$ | <标识符> = <表达式>, <初始化列表'> $\textcircled{1}$
+- <表达式语句> $\rightarrow$ <表达式>; $\textcircled{1}$
 - <表达式> $\rightarrow$ <赋值表达式>
 - <赋值表达式> $\rightarrow$ <变量标识符> = <赋值表达式> | <逻辑表达式>
 - <逻辑表达式> $\rightarrow$ <逻辑或表达式>
@@ -81,6 +80,16 @@
 - <加减运算符> $\rightarrow$ $+$ | $-$
 - <关系运算符> $\rightarrow$ $==$ | $!=$ | $<$ | $<=$ | $>$ | $>=$
 
+## 分析表
+| 左部非终极符 |`类型关键字`|`标识符`|`fun`|`var`|`val`|`if`|`else`|`while`|`return`| `(` | `)` | `{` | `}` | `,`| `;` | `:` | `=`| 
+|-------------|-----------|-------|-----|-----|-----|----|------|-------|--------|-----|-----|-----|-----|----|-----|-----|-----|
+| `<定义语句>` |           |       | $\textcircled{1}$ |  $\textcircled{2}$ |  $\textcircled{3}$ |
+| `<参数列表>` |           |$\textcircled{2}$|||     |    |      |       |        |     |$\textcircled{1}$
+| `<语句列表>` |           |$\textcircled{2}$|$\textcircled{2}$|$\textcircled{2}$|$\textcircled{2}$|$\textcircled{2}$||$\textcircled{2}$|$\textcircled{2}$|     ||$\textcircled{3}$|$\textcircled{1}$|
+| `<语句>`    |           |$\textcircled{3}$||$\textcircled{1}$|$\textcircled{2}$|$\textcircled{4}$||$\textcircled{5}$|$\textcircled{6}$
+|`<变量定义后缀>`|         |       |     |     |     |    |      |        |       |     |     |      |    |    |     | $\textcircled{1}$ | $\textcircled{2}$
+|`<初始化列表后缀'>`|      |       |     |     |      |   |      |         |       |    |     |       |    |$\textcircled{2}$|$\textcircled{1}$|
+|`<初始化列表后缀'>`|      |       |     |     |      |   |      |         |       |    |     |       |    |$\textcircled{2}$||$\textcircled{1}$|
 ## 变元中英文对照（AI 生成）
 
 | 中文变元         | 英文命名建议                    |
@@ -132,44 +141,49 @@
 
 |  id | 内容 |
 |:---:|:---:|
-|  1  |  Int  |
-|  2  |  Float  |
-|  3  |  Char  |
-|  4  |  Bool  |
-|  5  |  Void  |
-|  6  |  fun  |
-|  7  |  var  |
-|  8  |  val  |
-|  9  |  if  |
-|  10  |  else  |
-|  11 |  while  |
-|  12 |  return  |
+|  1  |  `Int`  |
+|  2  |  `Float`  |
+|  3  |  `Char`  |
+|  4  |  `Bool`  |
+|  5  |  `Void`  |
+|  6  |  `fun`  |
+|  7  |  `var`  |
+|  8  |  `val`  |
+|  9  |  `if`  |
+|  10  |  `else`  |
+|  11 |  `while`  |
+|  12 |  `return`  |
 
 ## 界符
 
 |  id | 内容 |
 |:---:|:----:|
-|  1  |  \(  |
-|  2  |  \)  |
-|  3  |  \{  |
-|  4  |  \}  |
-|  5  |  \[  |
-|  6  |  \]  |
-|  7  |  =   |
-|  8  | \|\| |
-|  9  |  &&  |
-|  10 |  !   |
-|  11 |  =   |
-|  12 |  ==  |
-|  13 |  !=  |
-|  14 |  >   |
-|  15 |  >=  |
-|  16 |  <   |
-|  17 |  <=  |
-|  18 |  +   |
-|  19 |  -   |
-|  20 |  *   |
-|  21 |  /   |
+|  1  |  `(`  |
+|  2  |  `)`  |
+|  3  |  `{`  |
+|  4  |  `}`  |
+|  5  |  `[`  |
+|  6  |  `]`  |
+|  7  |  `= `  |
+|  8  | `\|\|` |
+|  9  |  `&&`  |
+|  10 |  `!`  |
+|  11 |  `= `  |
+|  12 |  `==`  |
+|  13 |  `!=`  |
+|  14 |  `> `  |
+|  15 |  `>=`  |
+|  16 |  `< `  |
+|  17 |  `<=`  |
+|  18 |  `+ `  |
+|  19 |  `- `  |
+|  20 |  `* `  |
+|  21 |  `/ `  |
+|  22 |  `' `  |
+|  23 |  `\ `  |
+|  24 |  `, `  |
+|  25 |  `; `  |
+|  26 |  `: `  |
 
 ## 虚拟机相关
 
@@ -318,3 +332,4 @@
 ### 类型转换
 
 12 种类型转换，满足不同类型之间的转换。
+

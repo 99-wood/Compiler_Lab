@@ -17,4 +17,5 @@ add_executable(code main.cpp
         node.cpp
 )
 target_compile_options(code PRIVATE -Wall)
+target_compile_options(code PRIVATE -O2)
 

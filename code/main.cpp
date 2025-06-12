@@ -90,7 +90,7 @@ int main() {
     }
 
 
-    cout << "token:";
+    cout << "token:" << endl;
     for(int i = 0, line = 1; i < tokens.size(); ++i){
         const lexer::Token token = tokens[i];
         const auto [l, c] = tokenLoacation[i];
@@ -160,30 +160,16 @@ int main() {
                         << std::right << std::setw(10) << "token"
                         << std::right << std::setw(10) << "type"
                         << std::right << std::setw(10) << "kind" << endl;
-        for(const auto [token, type, kind, ptr, id] : symbolTable){
+        for(const auto &[token, type, kind, ptr, id] : symbolTable){
             cout<< std::right << std::setw(10) << I[token.id - 1]
                 << std::right << std::setw(10) << token.toString()
                 << std::right << std::setw(10) << type->toString()
                 << std::right << std::setw(10) << kind << endl;
         }
-        cout << "--------------------------Target Code---------------------------\n";
-        const vector<quad::Quad> targetCode = parser.getRes();
-        for(size_t i = 0; i < targetCode.size(); ++i){
-            cout << i << ": " << targetCode[i] << endl;
-        }
         cout << "------------------------Intermediate Code-----------------------\n";
         const vector<quad::Quad> mid = parser.getMid();
         for(size_t i = 0; i < mid.size(); ++i){
             cout << i << ": " << mid[i] << endl;
-        }
-        cout << "-------------------------Running Results------------------------\n";
-        quad::QuadRunner runner(mid);
-        runner.run();
-        for(const auto mem = runner.getRes();
-            const auto [token, res] : mem){
-            cout << token << " = "
-                    << std::right << std::setw(10) << res << " or "
-                    << std::right << std::setw(10) << std::bit_cast<float>(res) << endl;
         }
         cout << "-----------------Optimized Intermediate Code--------------------\n";
         node::Optimizer optimizer(mid);
@@ -192,16 +178,32 @@ int main() {
         for(size_t i = 0; i < optimizedMid.size(); ++i){
             cout << i << ": " << optimizedMid[i] << endl;
         }
-        cout << "-------------------------Running Results------------------------\n";
+        cout << "---------------Intermediate Code Running Results----------------\n";
+        const vector<quad::Quad> targetCode = parser.getRes();
+        for(size_t i = 0; i < targetCode.size(); ++i){
+            cout << i << ": " << targetCode[i] << endl;
+        }
 
+        cout << "----------Optimized Intermediate Code Running Results-----------\n";
+        quad::QuadRunner runner(mid);
+        runner.run();
+        for(const auto mem = runner.getRes();
+                const auto [token, res] : mem){
+            cout << token << " = "
+                 << std::right << std::setw(10) << res << " or "
+                 << std::right << std::setw(10) << std::bit_cast<float>(res) << endl;
+        }
+
+        cout << "-------------------------Running Results------------------------\n";
         quad::QuadRunner optimizedRunner(optimizedMid);
         optimizedRunner.run();
         for(const auto mem = optimizedRunner.getRes();
-            const auto [token, res] : mem){
+                const auto [token, res] : mem){
             cout << token << " = "
-                    << std::right << std::setw(10) << res << " or "
-                    << std::right << std::setw(10) << std::bit_cast<float>(res) << endl;
+                 << std::right << std::setw(10) << res << " or "
+                 << std::right << std::setw(10) << std::bit_cast<float>(res) << endl;
         }
+
         cout << "-------------------Target Code Running Results------------------\n";
         target::TargetRuner targetRuner(targetCode);
         if(targetRuner.run() != 0){
