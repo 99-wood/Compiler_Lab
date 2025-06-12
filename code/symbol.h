@@ -77,6 +77,16 @@ namespace symbol{
         FUN, PROCESS, CONST, TYPE, VAR, VAL
     };
 
+    inline std::ostream& operator<< (std::ostream& os, const SymbolKind &kind) {
+        if(kind == SymbolKind::FUN) return os << "FUN";
+        if(kind == SymbolKind::PROCESS) return os << "PROCESS";
+        if(kind == SymbolKind::CONST) return os << "CONST";
+        if(kind == SymbolKind::TYPE) return os << "TYPE";
+        if(kind == SymbolKind::VAR) return os << "VAR";
+        if(kind == SymbolKind::VAL) return os << "VAL";
+        assert(0);
+    }
+
     struct Symbol;
 
     using ParamInfo = vector<Symbol>;
@@ -144,8 +154,29 @@ namespace symbol{
         // Symbol(const Token &token, const TempSymbol &tSymbol);
     };
 
-    class SymbolTable : public vector<Symbol> {
+    class SymbolTable : private vector<Symbol> {
+        vector<Symbol> &global;
     public:
+        using std::vector<Symbol>::emplace_back;
+        using std::vector<Symbol>::begin;
+        using std::vector<Symbol>::end;
+        using std::vector<Symbol>::size;
+        using std::vector<Symbol>::operator[];
+        void push_back(const Symbol& sym) {
+            const Symbol copy = sym;
+             std::vector<Symbol>::push_back(copy);
+            global.push_back(copy); // 插入一份到 global
+        }
+
+        template <typename... Args>
+        void emplace_back(Args&&... args) {
+            const Symbol sym(std::forward<Args>(args)...);
+            std::vector<Symbol>::push_back(sym);
+            global.push_back(sym); // 插入一份到 global
+        }
+
+        explicit SymbolTable(std::vector<Symbol>& g) : global(g) {}
+
         [[nodiscard]] iterator findByToken(const Token &tk) {
             auto pos = this->begin();
             while(pos != this->end()){
@@ -163,6 +194,8 @@ namespace symbol{
             }
             return pos;
         }
+
+
     };
 } // symbol
 

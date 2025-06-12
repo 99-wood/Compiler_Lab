@@ -36,6 +36,7 @@ namespace parser{
         vector<SymbolTable> symbolTableStack;
         vector<std::pair<int, Token> > allocQuat;
         vector<std::pair<int, Token> > freeQuat;
+        vector<Symbol> global;
 
         int level{};
 
@@ -1273,7 +1274,7 @@ namespace parser{
             int IF_STACK_ALLOC; // 反填语句记录
             genCodeGlockCall(IF_STACK_ALLOC); // 生成块调用代码
             ++level;
-            symbolTableStack.emplace_back(); //构造符号表
+            symbolTableStack.emplace_back(global); //构造符号表
             if(!parseCodeBlock(ifBlockOffset, funSymbol)) return false;
             symbolTableStack.pop_back();
             ans.emplace_back("MOV", offsetToString(12 + (level - 1) * 4, 4), "DS"); // 段更换回来
@@ -1292,7 +1293,7 @@ namespace parser{
                 int ELSE_STACK_ALLOC;
                 genCodeGlockCall(ELSE_STACK_ALLOC);
                 ++level;
-                symbolTableStack.emplace_back();
+                symbolTableStack.emplace_back(global);
                 if(!parseCodeBlock(elseBlockOffset, funSymbol)) return false;
                 symbolTableStack.pop_back();
                 ans.emplace_back("MOV", offsetToString(12 + (level - 1) * 4, 4), "DS"); // 段更换回来
@@ -1343,7 +1344,7 @@ namespace parser{
             int STACK_ALLOC; // 反填语句记录
             genCodeGlockCall(STACK_ALLOC); // 生成块调用代码
             ++level;
-            symbolTableStack.emplace_back(); //构造符号表
+            symbolTableStack.emplace_back(global); //构造符号表
             if(!parseCodeBlock(BlockOffset, funSymbol)) return false;
             symbolTableStack.pop_back();
             ans.emplace_back("MOV", offsetToString(12 + (level - 1) * 4, 4), "DS"); // 段更换回来
@@ -1782,7 +1783,7 @@ namespace parser{
                 return false;
             }
             ++level;
-            symbolTableStack.emplace_back();
+            symbolTableStack.emplace_back(global);
             if(!parseParamList(*funInfo->paramInfoPtr, funInfo->stackSize)) return false;
             if(isMain && !funInfo->paramInfoPtr->empty()){
                 addErrNow("main's param must be empty");
@@ -1871,7 +1872,7 @@ namespace parser{
 
         // 处理 <程序>
         bool parseProgram() {
-            symbolTableStack.emplace_back();
+            symbolTableStack.emplace_back(global);
             const int STACK_ALLOC = static_cast<int>(ans.size());
             ans.emplace_back("STACK_ALLOC", "0");
             ans.emplace_back("MOV", "0", "[0: 4]");
@@ -1938,6 +1939,7 @@ namespace parser{
             hasParsed = true;
             freeQuat.clear();
             allocQuat.clear();
+            global.clear();
             return parseProgram();
         }
 
@@ -1955,6 +1957,9 @@ namespace parser{
 
         [[nodiscard]] vector<Quad> getMid() const {
             return mid;
+        }
+        [[nodiscard]] vector<Symbol> getGlobal() const {
+            return global;
         }
     };
 }
