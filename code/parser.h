@@ -5,6 +5,9 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+
+
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -1112,7 +1115,8 @@ namespace parser{
 
         // 处理 <初始化列表后缀>
         bool parseInitListSuffix(int &off, const Token &lastToken, const SymbolKind &kind) {
-            assert(match(Token("=")));
+            const bool isMatch = match(Token("="));
+            assert(isMatch);
             TempSymbol res{};
             if(!parseExpression(off, res)) return false;
             const Symbol var = {lastToken, res.type, kind, std::pair<int, int>(level, off), ++cntSymbol};
@@ -1190,7 +1194,8 @@ namespace parser{
 
         // 处理 <变量定义语句>
         bool parseVarDefStmt(int &off) {
-            assert(match(Token("var")));
+            const bool isMatch = match(Token("var"));
+            assert(isMatch);
             Token name{};
             // SymbolTable &symbolTable = symbolTableStack.back();
             if(expect(lexer::TokenType::I)){
@@ -1210,7 +1215,8 @@ namespace parser{
 
         // 处理 <常量定义语句>
         bool parseValDefStmt(int &off) {
-            assert(match(Token("val")));
+            const bool isMatch = match(Token("val"));
+            assert(isMatch);
             Token name{};
             // SymbolTable &symbolTable = symbolTableStack.back();
             if(expect(lexer::TokenType::I)){
@@ -1245,7 +1251,8 @@ namespace parser{
 
         // 处理 <if 语句>
         bool parseIfStmt(int &off, const Symbol &funSymbol) {
-            assert(match(Token("if")));
+            const bool isMatch = match(Token("if"));
+            assert(isMatch);
             if(!match(Token("("))) return false;
             TempSymbol res;
             parseExpression(off, res);
@@ -1313,7 +1320,8 @@ namespace parser{
 
         // 处理 <while 语句>
         bool parseWhileStmt(int &off, const Symbol &funSymbol) {
-            assert(match(Token("while")));
+            const bool isMatch = match(Token("while"));
+            assert(isMatch);
             if(!match(Token("("))) return false;
             const int WH = ans.size();
             const int WHM = mid.size();
@@ -1361,7 +1369,8 @@ namespace parser{
 
         // 处理 <return 语句>
         bool parseReturnStmt(int &off, const Symbol &funSymbol) {
-            assert(match(Token("return")));
+            const bool isMatch = match(Token("return"));
+            assert(isMatch);
             if(match(Token(";"))){
                 if(funSymbol.type != &VOID){
                     addErrNow("The function needs to return a value.");
@@ -1760,7 +1769,8 @@ namespace parser{
             // funInfo->stackSize = 16;
             // funInfo->paramInfoPtr = new ParamInfo();
             // funInfo->entry = static_cast<int>(ans.size());
-            assert(match(Token("fun")));
+            const bool isMatch = match(Token("fun"));
+            assert(isMatch);
             bool isMain = false;
             if(expect(lexer::TokenType::I)){
                 name = peek();

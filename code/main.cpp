@@ -63,9 +63,30 @@ int extractWarnTokenNumber(const std::string& message) {
         return -1;  // 找不到就返回 -1，表示错误
     }
 }
+std::string escapeBackslashes(const std::string& input) {
+    std::string result;
+    for (char ch : input) {
+        if (ch == '\\') {
+            result += "\\\\";
+        } else {
+            result += ch;
+        }
+    }
+    return result;
+}
 
 int main() {
-    const string code = readFileToString(string("..\\test.txt"));
+    string filePath = "..\\test.txt";
+// #define DEBUG
+#ifdef DEBUG
+#else
+    std::cout << "Enter file path: ";
+    std::getline(std::cin, filePath);
+    if(filePath.empty()) filePath = ".\\test.txt";
+    filePath = escapeBackslashes(filePath);
+#endif
+
+    const string code = readFileToString(filePath);
     cout << code << endl;
     vector<lexer::Token> tokens;
     vector<string> err;
@@ -76,7 +97,7 @@ int main() {
     lexer::scan(code, tokens, I, ci, cf, err, tokenLoacation);
     assert(tokenLoacation.size() == tokens.size());
     if(!err.empty()){
-        for(auto s : err){
+        for(const auto& s : err){
             std::cerr << s << endl;
             const auto [l, c] =parseErrorLineCol(s);
             const string errCode = getLineFromString(code, l);
@@ -105,15 +126,15 @@ int main() {
     cout << endl;
 
     cout << "I:";
-    for(auto str : I) cout << " " << str;
+    for(const auto& str : I) cout << " " << str;
     cout << endl;
 
     cout << "CI:";
-    for(auto token : ci) cout << " " << token;
+    for(const auto token : ci) cout << " " << token;
     cout << endl;
 
     cout << "CF:";
-    for(float x : cf) cout << " " << x;
+    for(const float x : cf) cout << " " << x;
     cout << endl;
 
     parser::Parser parser;
@@ -223,7 +244,8 @@ int main() {
                     << std::right << std::setw(10) << std::bit_cast<float>(res) << endl;
             cout << "[Time: " << duration_cast<milliseconds>(end3 - start3).count() << " ms]" << endl;
         }
-
     }
+    cout << "Press Enter to finish";
+    getchar();
     return 0;
 }
